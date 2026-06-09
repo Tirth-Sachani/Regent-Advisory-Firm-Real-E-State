@@ -111,7 +111,7 @@ export default function About() {
       
       {/* Header */}
       <section 
-        className="relative pt-36 pb-28 bg-[#050d18] text-white overflow-hidden border-b border-outline/10" 
+        className="relative pt-28 pb-16 sm:pt-36 sm:pb-28 bg-[#050d18] text-white overflow-hidden border-b border-outline/10" 
         ref={headerRef}
       >
         <div className="absolute inset-0 z-0 opacity-15">
@@ -138,7 +138,7 @@ export default function About() {
           </motion.span>
           
           {/* Custom Liquid Metal Letter-by-Letter heading reveal */}
-          <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight uppercase">
+          <h1 className="font-serif text-3xl sm:text-5xl md:text-7xl font-bold mb-8 leading-tight tracking-tight uppercase">
             {headingWords.map((word, wordIdx) => (
               <span key={wordIdx} className="inline-block whitespace-nowrap mr-3 md:mr-4">
                 {word.split("").map((char) => {
@@ -178,9 +178,9 @@ export default function About() {
       </section>
 
       {/* The Story */}
-      <section className="py-32 bg-[#081322] text-white border-b border-outline/10" ref={storyRef}>
+      <section className="relative py-16 sm:py-24 md:py-32 bg-[#081322] text-white border-b border-outline/10" ref={storyRef}>
         <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
             
             {/* Animated Diagonal Reveal Image */}
             <motion.div 
@@ -188,7 +188,7 @@ export default function About() {
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
               variants={storyContainerVariants}
-              className="relative h-[550px] w-full bg-[#0c1c30] border border-outline/15 overflow-hidden"
+              className="relative h-[280px] sm:h-[400px] md:h-[550px] w-full bg-[#0c1c30] border border-outline/15 overflow-hidden"
             >
               <motion.img 
                 variants={storyImageVariants}
@@ -202,7 +202,7 @@ export default function About() {
             {/* Story Text Info */}
             <div className="flex flex-col justify-center gap-8">
               <span className="text-[10px] text-tertiary font-bold tracking-[0.2em] uppercase font-sans">Our History</span>
-              <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold text-white">
+              <h2 className="font-serif text-2xl sm:text-4xl md:text-5xl font-semibold text-white">
                 A Legacy of Discretion
               </h2>
               <div className="font-sans text-sm sm:text-base md:text-lg text-neutral/75 leading-relaxed space-y-6 font-light">
@@ -246,7 +246,7 @@ export default function About() {
       {/* Metrics Section (Dynamic counter animation) */}
       <section 
         ref={statsSectionRef} 
-        className="py-24 bg-[#060e18] text-white border-b border-outline/10 relative overflow-hidden"
+        className="relative py-12 sm:py-16 md:py-24 bg-[#060e18] text-white border-b border-outline/10 overflow-hidden"
       >
         <div className="absolute inset-0 z-0 opacity-15">
           <Image 
@@ -308,7 +308,7 @@ export default function About() {
       {/* Core Values / Tenets */}
       <section 
         ref={tenetsSectionRef} 
-        className="py-32 bg-[#050d18] text-white overflow-hidden relative"
+        className="py-16 sm:py-24 md:py-32 bg-[#050d18] text-white overflow-hidden relative"
       >
         <div className="absolute inset-0 z-0 opacity-10">
           <Image 
@@ -328,7 +328,7 @@ export default function About() {
 
           {/* Core Tenets Stack Grid */}
           <div 
-            className="grid grid-cols-1 md:grid-cols-3 gap-10"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10"
             style={{ perspective: "1200px" }}
           >
             {[
@@ -348,7 +348,7 @@ export default function About() {
                   borderColor: "rgba(212, 175, 55, 0.4)",
                   boxShadow: "0 20px 40px rgba(0, 0, 0, 0.4)"
                 }}
-                className="tenet-card relative p-10 bg-[#081322]/80 border border-outline/10 text-center transition-all duration-300 transform-gpu overflow-visible select-none"
+                className="tenet-card relative p-6 sm:p-10 bg-[#081322]/80 border border-outline/10 text-center transition-all duration-300 transform-gpu overflow-visible select-none"
               >
                 {/* Custom animated border SVG */}
                 <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" xmlns="http://www.w3.org/2000/svg">

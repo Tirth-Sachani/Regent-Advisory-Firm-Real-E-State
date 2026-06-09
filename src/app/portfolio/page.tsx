@@ -21,7 +21,7 @@ export default function Portfolio() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header Section */}
-      <section className="relative pt-32 pb-24 bg-primary text-white overflow-hidden">
+      <section className="relative pt-28 pb-16 sm:pt-32 sm:pb-24 bg-primary text-white overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-30">
           <Image 
             src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
@@ -38,7 +38,7 @@ export default function Portfolio() {
           className="container relative z-10 max-w-4xl text-center"
         >
           <span className="font-sans text-xs font-semibold tracking-[0.1em] uppercase text-tertiary mb-4 block">Exclusive Collection</span>
-          <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6">Our Portfolio</h1>
+          <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold mb-6">Our Portfolio</h1>
           <p className="font-sans text-lg text-white/80 leading-relaxed mx-auto max-w-2xl">
             A curated selection of the finest prime real estate across London. From historic Mayfair townhouses to contemporary penthouses.
           </p>
@@ -46,7 +46,7 @@ export default function Portfolio() {
       </section>
 
       {/* Grid Section */}
-      <section className="py-24">
+      <section className="py-12 sm:py-16 md:py-24">
         <div className="container">
           <div className="flex flex-col md:flex-row justify-between items-center mb-12 border-b border-outline/10 pb-6">
             <p className="font-sans text-sm text-secondary font-semibold uppercase tracking-widest mb-4 md:mb-0">
@@ -65,7 +65,7 @@ export default function Portfolio() {
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 sm:gap-x-8 sm:gap-y-16"
           >
             {visibleProperties.map((prop, idx) => (
               <motion.div
@@ -79,7 +79,7 @@ export default function Portfolio() {
                   className="group cursor-pointer h-full"
                 >
                   <Link href={`/portfolio/${prop.id}`} className="block">
-                    <div className="relative h-[450px] w-full mb-6 overflow-hidden bg-surface-dim">
+                    <div className="relative h-[280px] sm:h-[380px] md:h-[450px] w-full mb-6 overflow-hidden bg-surface-dim">
                       <Image 
                         src={prop.images[0]} 
                         alt={prop.title}

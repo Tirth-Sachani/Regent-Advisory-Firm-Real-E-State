@@ -87,7 +87,7 @@ export default function Services() {
   return (
     <div className="min-h-screen bg-background">
       {/* 1. Cinematic Hero Section */}
-      <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden bg-primary">
+      <section className="relative h-[50vh] sm:h-[70vh] min-h-[350px] sm:min-h-[500px] flex items-center justify-center overflow-hidden bg-primary">
         <div className="absolute inset-0 z-0">
           <Image 
             src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
@@ -110,7 +110,7 @@ export default function Services() {
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.15, ease: premiumEase }}
-            className="font-serif text-5xl md:text-7xl font-bold text-white mb-6"
+            className="font-serif text-3xl sm:text-5xl md:text-7xl font-bold text-white mb-6"
           >
             Advisory Services
           </motion.h1>
@@ -135,7 +135,7 @@ export default function Services() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 1.0, ease: premiumEase }}
-              className="w-full lg:w-1/2 relative h-[50vh] lg:h-auto overflow-hidden group"
+              className="w-full lg:w-1/2 relative h-[300px] sm:h-[400px] lg:h-auto overflow-hidden group"
             >
               <Image 
                 src={service.image}
@@ -146,7 +146,7 @@ export default function Services() {
             </motion.div>
             
             {/* Text Side */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-12 lg:p-24 bg-surface-container-lowest">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-24 bg-surface-container-lowest">
               <motion.div 
                 initial="hidden"
                 whileInView="visible"
@@ -164,7 +164,7 @@ export default function Services() {
                 <motion.h2 
                   variants={fadeInUpVariants}
                   custom={{ delay: 0.15 }}
-                  className="font-serif text-4xl md:text-5xl font-semibold text-primary mb-8"
+                  className="font-serif text-2xl sm:text-4xl md:text-5xl font-semibold text-primary mb-8"
                 >
                   {service.title}
                 </motion.h2>
@@ -196,7 +196,7 @@ export default function Services() {
       </section>
 
       {/* 3. The Regent Advantage (Metrics Section) */}
-      <section ref={metricsRef} className="py-32 bg-primary text-white">
+      <section ref={metricsRef} className="relative py-16 sm:py-24 md:py-32 bg-primary text-white">
         <div className="container">
           <motion.div 
             initial="hidden"
@@ -214,7 +214,7 @@ export default function Services() {
             <motion.h2 
               variants={fadeInUpVariants}
               custom={{ delay: 0.15 }}
-              className="font-serif text-4xl md:text-5xl font-bold mb-6"
+              className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold mb-6"
             >
               A Proven Track Record
             </motion.h2>
@@ -235,7 +235,7 @@ export default function Services() {
               transition={{ duration: 0.8, delay: 0, ease: premiumEase }}
               className="pt-8 md:pt-0"
             >
-              <div className="font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4">
+              <div className="font-serif text-5xl sm:text-6xl md:text-7xl font-bold text-tertiary mb-4">
                 <Counter value={2.5} decimals={1} prefix="£" suffix="B+" />
               </div>
               <p className="font-sans text-sm tracking-widest uppercase text-white/80">Advised Transactions</p>
@@ -248,7 +248,7 @@ export default function Services() {
               transition={{ duration: 0.8, delay: 0.15, ease: premiumEase }}
               className="pt-8 md:pt-0"
             >
-              <div className="font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4">
+              <div className="font-serif text-5xl sm:text-6xl md:text-7xl font-bold text-tertiary mb-4">
                 <Counter value={40} suffix="+" />
               </div>
               <p className="font-sans text-sm tracking-widest uppercase text-white/80">Years Combined Experience</p>
@@ -261,7 +261,7 @@ export default function Services() {
               transition={{ duration: 0.8, delay: 0.3, ease: premiumEase }}
               className="pt-8 md:pt-0"
             >
-              <div className="font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4">
+              <div className="font-serif text-5xl sm:text-6xl md:text-7xl font-bold text-tertiary mb-4">
                 <Counter value={100} suffix="%" />
               </div>
               <p className="font-sans text-sm tracking-widest uppercase text-white/80">Client Discretion</p>
@@ -271,13 +271,13 @@ export default function Services() {
       </section>
 
       {/* 4. Process Timeline */}
-      <section ref={processRef} className="py-32 bg-surface-container-low">
+      <section ref={processRef} className="py-16 sm:py-24 md:py-32 bg-surface-container-low">
         <div className="container max-w-5xl">
           <div className="text-center mb-20">
             <h2 className="font-serif text-4xl font-semibold text-primary">Our Process</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 relative">
             <div className="hidden md:block absolute top-8 left-0 w-full h-[1px] bg-outline/20"></div>
             
             {[
@@ -306,7 +306,7 @@ export default function Services() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
                 transition={{ duration: 0.7, delay: shouldReduceMotion ? 0 : idx * 0.15, ease: premiumEase }}
-                className={`relative bg-background p-8 border border-outline/10 hover:border-tertiary transition-colors duration-500 z-10 ${proc.shift ? 'md:translate-y-8' : ''}`}
+                className={`relative bg-background p-6 sm:p-8 border border-outline/10 hover:border-tertiary transition-colors duration-500 z-10 ${proc.shift ? 'md:translate-y-8' : ''}`}
               >
                 <div className="w-16 h-16 bg-primary flex items-center justify-center text-tertiary font-serif text-2xl font-bold mb-8">{proc.step}</div>
                 <h3 className="font-serif text-2xl font-semibold text-primary mb-4">{proc.title}</h3>

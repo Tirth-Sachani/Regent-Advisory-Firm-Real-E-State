@@ -758,13 +758,13 @@ export default function AISuitePanel() {
   if (!mounted) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans flex items-end gap-4">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 font-sans flex items-end gap-3 sm:gap-4 max-w-[calc(100vw-2rem)]">
       {/* Floating Vertical Icon Dock */}
       <motion.div 
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1.0, ease: "easeOut" }}
-        className="flex flex-col gap-2 bg-[#081322]/90 border border-tertiary/20 p-2 shadow-2xl rounded-none backdrop-blur-md"
+        className="flex flex-col gap-2 bg-[#081322]/90 border border-tertiary/20 p-2 shadow-2xl rounded-none backdrop-blur-md shrink-0"
       >
         <motion.button
           onClick={() => handleTabClick("chat")}
@@ -911,7 +911,7 @@ export default function AISuitePanel() {
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.95, x: shouldReduceMotion ? 0 : 30 }}
             transition={{ duration: 0.4, ease: premiumEase }}
-            className="w-[420px] sm:w-[480px] h-[650px] bg-[#0c1c30]/95 backdrop-blur-xl border border-tertiary/20 shadow-2xl flex flex-col rounded-none overflow-hidden"
+            className="w-[calc(100vw-6rem)] sm:w-[420px] md:w-[480px] h-[80vh] sm:h-[650px] bg-[#0c1c30]/95 backdrop-blur-xl border border-tertiary/20 shadow-2xl flex flex-col rounded-none overflow-hidden"
           >
             {/* Drawer Header */}
             <div className="bg-[#081322] px-6 py-4 border-b border-tertiary/10 flex items-center justify-between">

@@ -150,7 +150,7 @@ export default function Home() {
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 35 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, delay: 0.35, ease: premiumEase }}
-            className="font-serif text-4xl sm:text-6xl md:text-8xl font-bold leading-tight mb-8 max-w-5xl tracking-tight uppercase bg-gradient-to-b from-[#FFF5E6] via-[#E6C687] to-[#C5A059] bg-clip-text text-transparent"
+            className="font-serif text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight mb-8 max-w-5xl tracking-tight uppercase bg-gradient-to-b from-[#FFF5E6] via-[#E6C687] to-[#C5A059] bg-clip-text text-transparent"
           >
             Timeless Authority in British Real Estate
           </motion.h1>
@@ -183,7 +183,7 @@ export default function Home() {
       {/* Philosophy Section */}
       <section 
         ref={philosophySectionRef} 
-        className="relative py-32 bg-[#081322] overflow-hidden border-t border-outline/10"
+        className="relative py-16 sm:py-24 md:py-32 bg-[#081322] overflow-hidden border-t border-outline/10"
       >
         {/* Golden SVG Drawing Divider Line */}
         <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[2px] hidden md:block opacity-20 pointer-events-none">
@@ -199,7 +199,7 @@ export default function Home() {
         </div>
 
         <div className="container px-6 sm:px-12 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
             {/* Philosophy Text Info */}
             <motion.div 
               initial="hidden"
@@ -248,7 +248,7 @@ export default function Home() {
               viewport={{ once: true, amount: 0.3 }}
               variants={scaleRevealVariants}
               custom={{ delay: 0.3, duration: 1.0 }}
-              className="relative h-[480px] w-full border border-outline/10 group overflow-hidden bg-[#0a182b]"
+              className="relative h-[280px] sm:h-[400px] md:h-[480px] w-full border border-outline/10 group overflow-hidden bg-[#0a182b]"
             >
               <Image 
                 src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
@@ -265,7 +265,7 @@ export default function Home() {
       {/* Featured Portfolio Section */}
       <section 
         ref={featuredRef} 
-        className="py-32 bg-[#060e18] border-y border-outline/10 relative overflow-hidden"
+        className="py-16 sm:py-24 md:py-32 bg-[#060e18] border-y border-outline/10 relative overflow-hidden"
       >
         <div className="absolute top-10 right-10 w-72 h-72 bg-tertiary/2 rounded-full filter blur-3xl pointer-events-none"></div>
 
@@ -321,7 +321,7 @@ export default function Home() {
             </motion.div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProperties.map((prop, idx) => (
               <motion.div
                 key={prop.id}
@@ -370,7 +370,7 @@ export default function Home() {
       {/* CTA Section */}
       <section 
         ref={ctaRef} 
-        className="relative py-32 bg-[#081322] text-center overflow-hidden"
+        className="relative py-16 sm:py-24 md:py-32 bg-[#081322] text-center overflow-hidden"
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-tertiary/5 via-transparent to-transparent pointer-events-none"></div>
 
@@ -382,7 +382,7 @@ export default function Home() {
           custom={{ delay: 0, duration: 0.8 }}
           className="container px-6 sm:px-12 max-w-4xl relative z-10"
         >
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold mb-6">Begin Your Journey</h2>
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-semibold mb-6">Begin Your Journey</h2>
           <p className="font-sans text-base sm:text-lg text-neutral/70 mb-12 max-w-2xl mx-auto leading-relaxed font-light">
             Whether you are acquiring a flagship residence or expanding your investment portfolio, our advisors are ready to guide you with unparalleled precision.
           </p>

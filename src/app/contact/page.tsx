@@ -50,7 +50,7 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <section className="pt-32 pb-20 bg-surface-container-low">
+      <section className="pt-28 pb-16 sm:pt-32 sm:pb-20 bg-surface-container-low">
         <motion.div 
           initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -58,7 +58,7 @@ export default function Contact() {
           className="container max-w-4xl"
         >
           <span className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-tertiary mb-6 block">Connect With Us</span>
-          <h1 className="font-serif text-5xl md:text-6xl font-bold text-primary mb-6">
+          <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold text-primary mb-6">
             Contact
           </h1>
           <p className="font-sans text-xl text-secondary/80 leading-relaxed max-w-2xl">
@@ -68,9 +68,9 @@ export default function Contact() {
       </section>
 
       {/* Content */}
-      <section className="py-24">
+      <section className="py-12 sm:py-16 md:py-24">
         <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
             
             {/* Contact Form */}
             <motion.div
@@ -189,7 +189,7 @@ export default function Contact() {
               transition={{ duration: 0.8, delay: 0.3, ease: premiumEase }}
               className="lg:pl-12"
             >
-              <div className="relative h-[300px] w-full bg-surface-dim mb-12">
+              <div className="relative h-[200px] sm:h-[300px] w-full bg-surface-dim mb-12">
                 <Image 
                   src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
                   alt="Mayfair London"

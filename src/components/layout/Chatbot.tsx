@@ -123,7 +123,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 font-sans max-w-[calc(100vw-2rem)]">
       {/* Floating Action Button */}
       {!isOpen && (
         <button
@@ -138,7 +138,7 @@ export default function Chatbot() {
 
       {/* Chat Box Panel */}
       {isOpen && (
-        <div className="w-[380px] sm:w-[400px] h-[580px] bg-[#0c1c30]/95 backdrop-blur-xl border border-tertiary/20 shadow-2xl flex flex-col transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-6 rounded-none overflow-hidden">
+        <div className="w-[calc(100vw-2rem)] sm:w-[400px] h-[80vh] sm:h-[580px] bg-[#0c1c30]/95 backdrop-blur-xl border border-tertiary/20 shadow-2xl flex flex-col transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-6 rounded-none overflow-hidden">
           {/* Header */}
           <div className="bg-[#081322] px-6 py-4 border-b border-tertiary/10 flex items-center justify-between">
             <div className="flex items-center gap-3">

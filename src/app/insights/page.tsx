@@ -45,7 +45,7 @@ export default function Insights() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <section className="relative pt-32 pb-20 bg-[#081322] text-white overflow-hidden border-b border-outline/10">
+      <section className="relative pt-28 pb-16 sm:pt-32 sm:pb-20 bg-[#081322] text-white overflow-hidden border-b border-outline/10">
         {/* Background Farmland Image */}
         <div className="absolute inset-0 z-0 opacity-20">
           <Image 
@@ -68,7 +68,7 @@ export default function Insights() {
           className="container max-w-4xl text-center relative z-10"
         >
           <span className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-tertiary mb-6 block">Research & Analysis</span>
-          <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-b from-[#FFF5E6] via-[#E6C687] to-[#C5A059] bg-clip-text text-transparent">
+          <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-b from-[#FFF5E6] via-[#E6C687] to-[#C5A059] bg-clip-text text-transparent">
             Market Insights
           </h1>
           <p className="font-sans text-xl text-[#E8DDD0]/85 leading-relaxed mx-auto max-w-2xl font-light">
@@ -78,14 +78,14 @@ export default function Insights() {
       </section>
 
       {/* Grid */}
-      <section className="py-24">
+      <section className="py-12 sm:py-16 md:py-24">
         <div className="container">
           <motion.div 
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={staggerContainer}
-            className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16"
+            className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10 md:gap-x-12 md:gap-y-16"
           >
             {insights.map((insight) => (
               <motion.div
@@ -99,7 +99,7 @@ export default function Insights() {
                   className="group cursor-pointer h-full"
                 >
                   <Link href="#" className="block">
-                    <div className="relative h-[350px] w-full mb-6 overflow-hidden">
+                    <div className="relative h-[220px] sm:h-[350px] w-full mb-6 overflow-hidden">
                       <Image 
                         src={insight.imageUrl} 
                         alt={insight.title}
@@ -136,7 +136,7 @@ export default function Insights() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.8, ease: premiumEase }}
-            className="mt-24 bg-surface-container-low p-12 text-center border border-outline/10"
+            className="mt-16 sm:mt-24 bg-surface-container-low p-6 sm:p-12 text-center border border-outline/10"
           >
             <h3 className="font-serif text-3xl font-semibold text-primary mb-4">Subscribe to our Intelligence</h3>
             <p className="font-sans text-secondary/80 mb-8 max-w-xl mx-auto">
