@@ -1,0 +1,202 @@
+ULTRA-DETAILED AI SUITE INTEGRATION SPECIFICATION
+10-Tier Master Prompt Architecture and Schema Mappings for Regent Estate SaaS
+Powered by Next.js 15, Supabase pgvector, and Google Gemini Key Matrix
+—————————————————————————————————————————————————————————————————
+1. Global AI API Gateway Infrastructure & Security Enforcements
+This architecture designs a highly scalable, serverless execution layout for the 10 core AI feature modules. To guarantee maximum system safety, your Gemini API key is permanently bound to the isolated backend server-side layer via secure environment configurations. All frontend user interactions are proxied through standard serverless endpoint hooks to prevent client-side credential leaking, enforce Row Level Security (RLS), and handle real-time vector embeddings.
+2. Deep-Dive Core AI Features & Code-Generation Prompt Modules
+This section breaks down the implementation architecture for all 10 AI features specified in the roadmap. Each module features explicit data mappings alongside an enterprise code-generation prompt ready for your code editor workspace (Cursor, Claude Code, or ChatGPT).
+Module 1: AI Property Recommendation Engine
+• Relational Database Tables Referenced: `user_preferences`, `recommendation_history`, `properties`, `property_features` (Supabase pgvector mapping layer)
+• Algorithmic Architecture & Execution Logic: Calculates semantic cosine similarity metrics between natural language user preference configurations and property detail vectors stored in PostgreSQL via pgvector thresholds.
+🚀 CODE-GENERATION PROMPT: AI PROPERTY RECOMMENDATION ENGINE
+
+Module 2: AI Budget Advisor
+• Relational Database Tables Referenced: `financial_profiles`, `user_preferences`, `ai_conversations`
+• Algorithmic Architecture & Execution Logic: Parses complex personal financial details (gross monthly earnings, debt profiles, downpayment targets) and scores real estate feasibility variables to output safe investment brackets.
+🚀 CODE-GENERATION PROMPT: AI BUDGET ADVISOR
+
+Module 3: AI Mortgage & EMI Calculator
+• Relational Database Tables Referenced: `emi_calculations`, `financial_profiles`
+• Algorithmic Architecture & Execution Logic: Provides intelligent conversational analysis of mortgage amortization schedules, identifying early repayment tactics and long-term interest trends.
+🚀 CODE-GENERATION PROMPT: AI MORTGAGE & EMI CALCULATOR
+
+Module 4: AI Property Comparison Engine
+• Relational Database Tables Referenced: `property_comparisons`, `properties`, `property_features`
+• Algorithmic Architecture & Execution Logic: Performs unstructured feature alignment matching, cross-referencing multi-property vectors across cost, appreciation projections, localized school data, and transit scores.
+🚀 CODE-GENERATION PROMPT: AI PROPERTY COMPARISON ENGINE
+
+Module 5: AI Lead Qualification System
+• Relational Database Tables Referenced: `leads`, `lead_activities`
+• Algorithmic Architecture & Execution Logic: Scans conversational chat transcripts, calculating lead scores dynamically (0-100) and categorizing entries as Hot, Warm, or Cold based on intent signals.
+🚀 CODE-GENERATION PROMPT: AI LEAD QUALIFICATION SYSTEM
+
+Module 6: AI Appointment Booking Assistant
+• Relational Database Tables Referenced: `appointments`, `leads`, `users` (Advisor slots framework)
+• Algorithmic Architecture & Execution Logic: Parses natural language requests for calendar slots, checks advisor calendar rows, and schedules upcoming consulting calls via automated server-side triggers.
+🚀 CODE-GENERATION PROMPT: AI APPOINTMENT BOOKING ASSISTANT
+
+Module 7: AI WhatsApp Integration Gateway
+• Relational Database Tables Referenced: `whatsapp_conversations`, `leads`
+• Algorithmic Architecture & Execution Logic: Binds inbound WhatsApp Business webhooks to the Gemini context loop, sending immediate human-style responses and updating lead cards automatically.
+🚀 CODE-GENERATION PROMPT: AI WHATSAPP INTEGRATION GATEWAY
+
+Module 8: AI Property Search Assistant
+• Relational Database Tables Referenced: `properties`, `property_search_logs`
+• Algorithmic Architecture & Execution Logic: Translates loose, conversational search queries (e.g., 'pet friendly luxury apartment with high yields near Metro') into structured database query filters.
+🚀 CODE-GENERATION PROMPT: AI PROPERTY SEARCH ASSISTANT
+
+Module 9: AI Market Research Assistant
+• Relational Database Tables Referenced: `market_reports`, `properties`
+• Algorithmic Architecture & Execution Logic: Aggregates localized pricing trends, infrastructure changes, and inventory volumes to auto-generate downloadable market research analyses.
+🚀 CODE-GENERATION PROMPT: AI MARKET RESEARCH ASSISTANT
+
+Module 10: AI Real Estate Knowledge Base
+• Relational Database Tables Referenced: `market_reports`, `ai_conversations`
+• Algorithmic Architecture & Execution Logic: An isolated legal and tax RAG pipeline that gives users accurate, citation-backed answers regarding FEMA laws, TDS rules, and NRI property compliance.
+🚀 CODE-GENERATION PROMPT: AI REAL ESTATE KNOWLEDGE BASE
+
+3. Consolidated Relational Database Topology & pgvector Mapping
+To support all 10 AI features without data duplication, the database schema utilizes a tightly unified relational structure in Supabase PostgreSQL. This matrix maps the core tables, field tracking requirements, and indexing patterns needed to ensure clean operation under scale.
+
+4. Four-Phase AI Architecture Execution & Strategic Milestones
+To guarantee a secure, organized system rollout, avoid deploying all 10 features at the same time. Follow this phased four-step release timeline to systematically build dependencies, test database vectors, and verify real-time user engagement.
+— End of Regent Estate 10-Tier AI Suite Master Implementation Specification —
+SECURE DEPLOYMENT ENVIRONMENT CONFIGURATION (.env.local):
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-private-service-role-key
+
+⚠️ SECURITY ENFORCEMENT PROTOCOL: The Gemini credential must remain strictly isolated on the backend server layer. Never expose it to the client web browser. Enforce rate-limiting of 20 API hits per minute per user profile block.
+Act as a Principal Database and AI Engineer. Build an AI Property Recommendation Engine using Next.js 15 and Supabase pgvector.
+Requirements:
+1. Database Schema Extension: Write an SQL script to apply `pgvector` to the `properties` metadata grid. Add a column `property_embedding vector(1536)`.
+2. Server Route Handler (`app/api/ai/recommendations/route.ts`):
+   - Securely read the incoming user session ID via Supabase server-side client components.
+   - Query the `user_preferences` table to pull recent query parameters and choices.
+   - Use the official Google Gen AI SDK (`@google/genai`) to pass user preference text strings into an embedding model to extract a 1536-dimension text vector.
+   - Perform a vector cosine similarity match against the `properties.property_embedding` column using a standard threshold query filter.
+   - Log the recommended property match history inside the `recommendation_history` relational datastore.
+3. Code Quality: Enforce complete TypeScript interface checking, return structured JSON objects, and avoid front-end logic coupling.
+Act as an Expert Fintech AI Engineer. Build an AI Budget Advisor module in React and Next.js.
+Requirements:
+1. API Execution Endpoint (`app/api/ai/budget-advisor/route.ts`): Parse user financial payloads containing `monthlyIncome`, `currentDebts`, `savedDownpayment`, and `targetTimeline`.
+2. Gemini Context Rules: Initialize the official `@google/genai` client targeting `gemini-1.5-flash`. Pass structured financial data inside system instructions. Instruct the AI to compute realistic maximum purchase limits, recommend monthly allocation distributions, and provide a textual strategic warning flag if debt-to-income limits go beyond 43%.
+3. Output Template: Enforce structured JSON data return configurations containing fields: `maxPropertyBudget`, `recommendedMonthlyMortgage`, `debtToIncomeRatio`, and a detailed `advisoryNarrative` string.
+4. Component Layer: Build a sleek summary layout page with text inputs using Tailwind CSS and Radix UI primitives.
+Act as a Senior Financial software engineer. Build an AI conversational layer for the Mortgage & EMI Calculator page.
+Requirements:
+1. Core Logic: Combine a standard mathematical EMI calculation engine with an AI analytical interface stream.
+2. Server API Route: Accept `principal`, `interestRate`, and `tenureYears`. Calculate the amortization timeline array programmatically on the server.
+3. Gemini Context Parsing: Pass the calculated amortization array into `ai.models.generateContentStream` as context. Instruct Olivia to explain the long-term interest trajectory, suggest strategic prepayments (e.g., 'paying 1 extra EMI annually saves 4 years of interest'), and break down how macroeconomic changes might impact their loan.
+4. UI Tier: Display the results in a beautiful React layout showing chart visualizations right alongside Olivia's tailored commentary box.
+Act as a Senior UI/UX and AI Architect. Implement an automated AI Property Comparison Component block.
+Requirements:
+1. Endpoint Layout (`app/api/ai/compare/route.ts`): Expect an array of up to three unique property UUID strings. Fetch full details from `properties` and `property_features`.
+2. Prompt Strategy: Send all details to the Gemini client interface. Instruct the model to analyze pros/cons, score appreciation outlook, compare hidden ownership fees, and calculate structural location metrics (transit, proximity to commercial hubs).
+3. Structured Output: Require a JSON schema return containing a clear breakdown array for each listing, finished with a final concise `investmentRecommendation` summarizing the best value proposition.
+4. Front-End Setup: Create a grid component in React that handles a dynamic side-by-side table layout using Tailwind CSS.
+Act as a principal MERN CRM engineer. Build an automated AI Lead Qualification background agent using Next.js Server Actions.
+Requirements:
+1. Data Pipeline: Create a trigger function that watches for updates to the `ai_conversations` table.
+2. Lead Scoring Handler: Send the full chat text history to Gemini. Instruct the model to look for strong purchase signs: budget clarity, explicit timeframes, and requests for site viewings.
+3. Output Parameters: Output a strict JSON structure containing `leadScore` (integer 0-100), `intentCategory` ('HOT', 'WARM', 'COLD'), and a list of `extractedRequirements` (e.g., 'prefers 3-bedroom commercial spaces').
+4. Database Sync: Automatically write these results to the `leads` table and log the automated analysis to `lead_activities` for advisor overview dashboards.
+Act as a Senior Backend Systems Engineer. Build an AI Appointment Booking Route Handler.
+Requirements:
+1. API Architecture: Create a POST route under `/api/ai/booking`. It must parse loose human text fields like 'Can I meet with Olivia next Thursday morning?'.
+2. Calendar Ingestion Layer: Pull real-time available time-slots for the requested advisor from the database.
+3. Gemini Selection Protocol: Pass the text request and advisor availability matrix to Gemini. Instruct the model to match the best date/time window, extract the booking parameters, and confirm with the user.
+4. Execution Logic: Upon validation, execute a secure insert query into the `appointments` table with the correct relations. Return a success message alongside the formal meeting confirmation details.
+Act as a Principal Integration Architect. Build an automated AI WhatsApp Integration microservice layer in Next.js.
+Requirements:
+1. Webhook Endpoint (`app/api/webhooks/whatsapp/route.ts`): Accept inbound message payloads from the Meta WhatsApp Business API network.
+2. Conversation Sync: Check for matching user identities inside the `leads` table using phone numbers. Log the new text message to the `whatsapp_conversations` ledger.
+3. Gemini Streaming Hook: Feed the message history into Gemini using Olivia's personalized system prompt parameters. Enforce a crisp sentence limit (under 150 characters per message) suitable for clean WhatsApp delivery.
+4. Automated Push: Forward the model's text return back to the Meta API via an external POST request using your verified access tokens.
+Act as a Principal Database Engineer. Build a natural language AI Property Search Assistant route using Next.js 15.
+Requirements:
+1. Endpoint Hook (`app/api/search/assistant/route.ts`): Accept an unstructured text string parameter query from the frontend.
+2. Gemini Query Translation: Send the search query to Gemini. Instruct the model to parse the string into clean database query variables. Return a JSON structure matching this schema: `{ minPrice: number, maxPrice: number, location: string, tags: string[], structuralLimit: number }`.
+3. Execution Block: Use the extracted parameters to query your database dynamically. Return the resulting matching rows to the frontend while logging the search metrics to `property_search_logs` for search analytics.
+Act as an Enterprise Data Analyst Systems Architect. Build a serverless AI Market Research Assistant layer.
+Requirements:
+1. Data Aggregation Handler (`app/api/ai/market-research/route.ts`): Query transaction metadata, averaging price fluctuations across regions like Mayfair, Belgravia, or Surat zones over the last year.
+2. Gemini Research Protocol: Pass the raw data metrics to Gemini. Instruct the model to draft an expert real estate research summary, breaking down quarter-over-quarter price shifts, identifying high-yield pockets, and scoring future growth outlooks.
+3. Gated Lead Integration: Store the generated report in the `market_reports` collection and return it as clean markdown text to the client UI, prompting casual visitors to save their email info to unlock the full report.
+Act as a Principal Fintech Compliance Developer. Build an AI Real Estate Knowledge Base module in Next.js 15.
+Requirements:
+1. Core Scope: Create an isolated legal and regulatory assistant for cross-border transactions (FEMA laws, TDS withholding frameworks, and NRE/NRO banking structures).
+2. Query Ingestion Route: Read user compliance questions. Perform a vector query against a specialized database table of verified real estate laws to extract the relevant text blocks.
+3. Secure Context Passing: Feed the legal text fragments directly into Gemini as verified context. Instruct the model to draft an explicit, step-by-step reply with proper regulatory citations.
+4. Legal Disclaimer Injection: Force the assistant to append a strict disclosure note at the end of every response stating that the content serves purely as a structural guide and does not replace official legal counsel.
+Target Database Table
+Tracked Fields & Layout Vectors
+Indexing & Optimization Focus
+users
+id (uuid, PK), email (text), full_name (text), role (check constraint: admin, advisor, client), created_at.
+B-Tree index on email lookup fields
+properties
+id (uuid, PK), title (text), base_price (numeric), location (text), property_embedding (vector(1536)).
+IVFFlat / HNSW index on embeddings
+property_images
+id (uuid, PK), property_id (FK), image_url (text), display_order (integer).
+Foreign Key cascade on property deletions
+property_features
+id (uuid, PK), property_id (FK), feature_metadata (jsonb for beds, baths, amenities matrices).
+GIN index on jsonb feature keys
+user_preferences
+id (uuid, PK), user_id (FK), target_location (text), budget_max (numeric), search_vector (vector(1536)).
+Index on user identification arrays
+recommendation_history
+id (uuid, PK), user_id (FK), property_id (FK), similarity_score (numeric), shown_at (timestamptz).
+Composite index on user and property keys
+financial_profiles
+id (uuid, PK), user_id (FK), gross_monthly_income (numeric), absolute_debts (numeric), downpayment_cash.
+Row-level constraint filters validation
+emi_calculations
+id (uuid, PK), user_id (FK), loan_principal (numeric), applied_interest (numeric), term_months (integer).
+Standard timestamp logs ordering
+property_comparisons
+id (uuid, PK), user_id (FK), comparison_array (uuid[] list referencing properties), created_at.
+Array indexing for comparison lookup queries
+leads
+id (uuid, PK), contact_name (text), email (text), lead_score (integer), intent_tier (HOT, WARM, COLD), assigned_advisor.
+B-Tree index targeting lead score fields
+lead_activities
+id (uuid, PK), lead_id (FK), operational_action (text), metadata_snapshot (jsonb), created_at.
+Ordering index based on timestamps
+appointments
+id (uuid, PK), lead_id (FK), advisor_id (FK), scheduled_timefile (timestamptz), operational_status.
+Overlapping conflict constraint validation
+whatsapp_conversations
+id (uuid, PK), phone_number (text), conversation_history_log (jsonb array data ledger).
+B-Tree index mapping telephone numbers
+property_search_logs
+id (uuid, PK), parsed_search_query (text), extracted_sql_parameters (jsonb), run_at.
+Full-text search indices deployment
+ai_conversations
+id (uuid, PK), session_id (uuid), history_payload (jsonb schema logs structure), system_version.
+Index on conversational session tokens
+market_reports
+id (uuid, PK), geographic_zone (text), average_square_cost (numeric), market_narrative_text (text).
+Full-text search layout deployment indexes
+Implementation Phase
+Bundled AI Feature Scope Modules
+Architectural Milestone Objective
+Phase 1: Foundation
+Features: 8. AI Property Search Assistant, 5. AI Lead Qualification, Olivia Conversational Base.
+Tables: `users`, `properties`, `leads`, `ai_conversations`, `property_search_logs`.
+Deploy serverless AI routes, test search token translation patterns, and launch real-time lead capture structures.
+Phase 2: Wealth Tech
+Features: 1. AI Property Recommendation Engine, 2. AI Budget Advisor, 3. AI Mortgage & EMI Calculator, 4. AI Property Comparison.
+Tables: `user_preferences`, `recommendation_history`, `financial_profiles`, `emi_calculations`, `property_comparisons`.
+Enable Supabase pgvector embedding indexes, connect mathematical amortization matrices, and deploy client-side financial tools.
+Phase 3: Automation
+Features: 6. AI Appointment Booking, 7. AI WhatsApp Integration Gateway.
+Tables: `appointments`, `whatsapp_conversations`, `lead_activities`.
+Connect inbound Meta WhatsApp webhook services, launch calendar schedule parsers, and automate client booking notifications.
+Phase 4: Market Intelligence
+Features: 9. AI Market Research Assistant, 10. AI Real Estate Knowledge Base.
+Tables: `market_reports` (RAG Pipeline infrastructure setup).
+Deploy localized market trend analysis scripts, establish legal regulatory compliance RAG channels, and hook up gated lead downloads.

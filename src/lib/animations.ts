@@ -1,62 +1,99 @@
 "use client";
 
-import { useEffect, RefObject } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useReducedMotion } from "framer-motion";
 
-// Ensure ScrollTrigger is registered
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
+export const viewportConfig = {
+  once: true,
+  amount: 0.3
+};
+
+// Easing curve similar to Apple/Sotheby's premium feel
+export const premiumEase: [number, number, number, number] = [0.25, 0.1, 0.25, 1.0];
+
+export const premiumTransition = (delay = 0, duration = 0.8) => ({
+  duration,
+  delay,
+  ease: premiumEase
+});
+
+// Helper variants
+export const fadeInUpVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (custom: { delay?: number; duration?: number } = {}) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: custom.duration ?? 0.8,
+      delay: custom.delay ?? 0,
+      ease: premiumEase
+    }
+  })
+};
+
+export const scaleRevealVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
+  visible: (custom: { delay?: number; duration?: number } = {}) => ({
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: custom.duration ?? 0.8,
+      delay: custom.delay ?? 0,
+      ease: premiumEase
+    }
+  })
+};
+
+// Custom React hook to respect accessibility rules (prefers-reduced-motion)
+export function useMotionConfig() {
+  const shouldReduceMotion = useReducedMotion();
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 30 },
+    visible: (custom: { delay?: number; duration?: number } = {}) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: custom.duration ?? 0.8,
+        delay: custom.delay ?? 0,
+        ease: premiumEase
+      }
+    })
+  };
+
+  const scaleReveal = {
+    hidden: { opacity: 0, scale: shouldReduceMotion ? 1 : 0.95, y: shouldReduceMotion ? 0 : 20 },
+    visible: (custom: { delay?: number; duration?: number } = {}) => ({
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        duration: custom.duration ?? 0.8,
+        delay: custom.delay ?? 0,
+        ease: premiumEase
+      }
+    })
+  };
+
+  const staggerContainer = {
+    hidden: {},
+    visible: (delay = 0) => ({
+      transition: {
+        delayChildren: delay,
+        staggerChildren: 0.15
+      }
+    })
+  };
+
+  return {
+    fadeInUp,
+    scaleReveal,
+    staggerContainer,
+    shouldReduceMotion,
+    viewport: viewportConfig
+  };
 }
 
-export const useFadeIn = <T extends HTMLElement = HTMLElement>(ref: RefObject<T | null>, delay: number = 0) => {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    gsap.fromTo(
-      el,
-      { opacity: 0, y: 30 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        delay,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: el,
-          start: "top 85%",
-          toggleActions: "play none none none",
-        },
-      }
-    );
-  }, [ref, delay]);
-};
-
-export const useStaggerFadeIn = <T extends HTMLElement = HTMLElement>(ref: RefObject<T | null>, selector: string) => {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const elements = el.querySelectorAll(selector);
-    
-    if (elements.length === 0) return;
-
-    gsap.fromTo(
-      elements,
-      { opacity: 0, y: 40 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        stagger: 0.1,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: el,
-          start: "top 80%",
-          toggleActions: "play none none none",
-        },
-      }
-    );
-  }, [ref, selector]);
-};
+// Dummy backward compatibility hooks to prevent compile errors if old references exist
+export const useFadeIn = (ref: any, delay = 0) => {};
+export const useStaggerFadeIn = (ref: any, selector: string) => {};

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPropertyById, properties } from "@/data/properties";
 import { Button } from "@/components/ui/Button";
+import { PropertyEnquiryForm } from "@/components/PropertyEnquiryForm";
 
 // Pre-generate routes for all properties
 export async function generateStaticParams() {
@@ -117,21 +118,7 @@ export default async function PropertyDetails({ params }: { params: Promise<{ id
                 <p className="font-sans text-sm text-secondary/80 mb-8 leading-relaxed">
                   Register your interest to receive the full brochure, floor plans, and arrange a private viewing.
                 </p>
-                <form className="flex flex-col gap-4 font-sans">
-                  <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-primary mb-2">Name</label>
-                    <input type="text" className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors" placeholder="Full Name" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-primary mb-2 mt-4">Email</label>
-                    <input type="email" className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors" placeholder="Email Address" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-primary mb-2 mt-4">Phone</label>
-                    <input type="tel" className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors" placeholder="Phone Number" />
-                  </div>
-                  <Button variant="primary" className="w-full mt-8">Enquire Now</Button>
-                </form>
+                <PropertyEnquiryForm propertyId={property.id} propertyTitle={property.title} />
 
                 <div className="mt-10 pt-8 border-t border-outline/10">
                   <h4 className="font-sans text-xs font-semibold tracking-[0.1em] uppercase text-secondary/60 mb-3">Or contact us directly</h4>

@@ -1,20 +1,53 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useEffect } from "react";
-import { useFadeIn, useStaggerFadeIn } from "@/lib/animations";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useInView, animate } from "framer-motion";
+import { useMotionConfig, premiumEase, fadeInUpVariants, scaleRevealVariants } from "@/lib/animations";
+
+// Stats Counter Component
+interface CounterProps {
+  value: number;
+  duration?: number;
+  suffix?: string;
+  prefix?: string;
+  decimals?: number;
+}
+
+function Counter({ value, duration = 2, suffix = "", prefix = "", decimals = 0 }: CounterProps) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.3 });
+
+  useEffect(() => {
+    if (inView) {
+      const controls = animate(0, value, {
+        duration,
+        ease: "easeOut",
+        onUpdate: (latest) => {
+          setCount(latest);
+        }
+      });
+      return () => controls.stop();
+    }
+  }, [inView, value, duration]);
+
+  return (
+    <span ref={ref}>
+      {prefix}
+      {count.toFixed(decimals)}
+      {suffix}
+    </span>
+  );
+}
 
 export default function Services() {
-  const heroTextRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
   const metricsRef = useRef<HTMLDivElement>(null);
   const processRef = useRef<HTMLDivElement>(null);
   
-  useFadeIn(heroTextRef, 0.2);
-  useFadeIn(metricsRef, 0.2);
-  useStaggerFadeIn(processRef, ".process-step");
+  const { shouldReduceMotion } = useMotionConfig();
 
   const services = [
     {
@@ -51,42 +84,6 @@ export default function Services() {
     }
   ];
 
-  // Number counter animation for metrics
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      gsap.registerPlugin(ScrollTrigger);
-      
-      const counters = document.querySelectorAll(".metric-number");
-      counters.forEach((counter) => {
-        const targetStr = counter.getAttribute("data-target") || "0";
-        const isBillion = targetStr.includes("B");
-        const isPlus = targetStr.includes("+");
-        const targetValue = parseFloat(targetStr.replace(/[^0-9.]/g, ""));
-        
-        ScrollTrigger.create({
-          trigger: counter,
-          start: "top 85%",
-          once: true,
-          onEnter: () => {
-            gsap.fromTo(counter, 
-              { innerText: 0 },
-              {
-                innerText: targetValue,
-                duration: 2,
-                ease: "power2.out",
-                snap: { innerText: isBillion ? 0.1 : 1 },
-                onUpdate: function() {
-                  const val = this.targets()[0].innerText;
-                  counter.innerHTML = `${isBillion ? '£' : ''}${val}${isBillion ? 'B' : ''}${isPlus ? '+' : ''}`;
-                }
-              }
-            );
-          }
-        });
-      });
-    }
-  }, []);
-
   return (
     <div className="min-h-screen bg-background">
       {/* 1. Cinematic Hero Section */}
@@ -100,14 +97,31 @@ export default function Services() {
             priority
           />
         </div>
-        <div className="container relative z-10 text-center" ref={heroTextRef}>
-          <h4 className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-tertiary mb-6">Our Expertise</h4>
-          <h1 className="font-serif text-5xl md:text-7xl font-bold text-white mb-6">
+        <div className="container relative z-10 text-center" ref={heroRef}>
+          <motion.span 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: premiumEase }}
+            className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-tertiary mb-6 block"
+          >
+            Our Expertise
+          </motion.span>
+          <motion.h1 
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15, ease: premiumEase }}
+            className="font-serif text-5xl md:text-7xl font-bold text-white mb-6"
+          >
             Advisory Services
-          </h1>
-          <p className="font-sans text-xl text-white/80 leading-relaxed max-w-2xl mx-auto">
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.35, ease: premiumEase }}
+            className="font-sans text-xl text-white/80 leading-relaxed max-w-2xl mx-auto"
+          >
             Independent, data-driven, and entirely client-focused. We navigate the complexities of the prime real estate market with absolute precision.
-          </p>
+          </motion.p>
         </div>
       </section>
 
@@ -116,66 +130,148 @@ export default function Services() {
         {services.map((service, index) => (
           <div key={service.id} className={`flex flex-col ${index % 2 !== 0 ? 'lg:flex-row-reverse' : 'lg:flex-row'} min-h-[80vh]`}>
             {/* Image Side */}
-            <div className="w-full lg:w-1/2 relative h-[50vh] lg:h-auto overflow-hidden group">
+            <motion.div 
+              initial={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.98 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 1.0, ease: premiumEase }}
+              className="w-full lg:w-1/2 relative h-[50vh] lg:h-auto overflow-hidden group"
+            >
               <Image 
                 src={service.image}
                 alt={service.title}
                 fill
                 className="object-cover transition-transform duration-1000 group-hover:scale-105"
               />
-            </div>
+            </motion.div>
+            
             {/* Text Side */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-12 lg:p-24 bg-surface-container-lowest">
-              <div className="max-w-xl">
-                <span className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-secondary/60 mb-4 block">0{index + 1} — {service.subtitle}</span>
-                <h2 className="font-serif text-4xl md:text-5xl font-semibold text-primary mb-8">{service.title}</h2>
-                <p className="font-sans text-lg text-secondary/90 leading-relaxed mb-10">
+              <motion.div 
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                className="max-w-xl"
+              >
+                <motion.span 
+                  variants={fadeInUpVariants}
+                  custom={{ delay: 0 }}
+                  className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-secondary/60 mb-4 block"
+                >
+                  0{index + 1} — {service.subtitle}
+                </motion.span>
+                
+                <motion.h2 
+                  variants={fadeInUpVariants}
+                  custom={{ delay: 0.15 }}
+                  className="font-serif text-4xl md:text-5xl font-semibold text-primary mb-8"
+                >
+                  {service.title}
+                </motion.h2>
+                
+                <motion.p 
+                  variants={fadeInUpVariants}
+                  custom={{ delay: 0.3 }}
+                  className="font-sans text-lg text-secondary/90 leading-relaxed mb-10"
+                >
                   {service.description}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
+                </motion.p>
+                
+                <motion.div 
+                  variants={fadeInUpVariants}
+                  custom={{ delay: 0.45 }}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8"
+                >
                   {service.features.map((feature, fIndex) => (
                     <div key={fIndex} className="flex items-center gap-3 font-sans text-secondary">
                       <span className="w-1.5 h-1.5 bg-tertiary"></span>
                       <span className="text-sm font-semibold">{feature}</span>
                     </div>
                   ))}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             </div>
           </div>
         ))}
       </section>
 
       {/* 3. The Regent Advantage (Metrics Section) */}
-      <section className="py-32 bg-primary text-white" ref={metricsRef}>
+      <section ref={metricsRef} className="py-32 bg-primary text-white">
         <div className="container">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h4 className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-tertiary mb-4">The Regent Advantage</h4>
-            <h2 className="font-serif text-4xl md:text-5xl font-bold mb-6">A Proven Track Record</h2>
-            <p className="font-sans text-lg text-white/70 leading-relaxed">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="text-center max-w-3xl mx-auto mb-20"
+          >
+            <motion.h4 
+              variants={fadeInUpVariants}
+              custom={{ delay: 0 }}
+              className="font-sans text-xs font-semibold tracking-[0.2em] uppercase text-tertiary mb-4"
+            >
+              The Regent Advantage
+            </motion.h4>
+            <motion.h2 
+              variants={fadeInUpVariants}
+              custom={{ delay: 0.15 }}
+              className="font-serif text-4xl md:text-5xl font-bold mb-6"
+            >
+              A Proven Track Record
+            </motion.h2>
+            <motion.p 
+              variants={fadeInUpVariants}
+              custom={{ delay: 0.3 }}
+              className="font-sans text-lg text-white/70 leading-relaxed"
+            >
               Our clients rely on our undisputed market intelligence and absolute discretion to achieve their strategic real estate objectives.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-white/10">
-            <div className="pt-8 md:pt-0">
-              <div className="metric-number font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4" data-target="£2.5B+">£0B</div>
+            <motion.div 
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, delay: 0, ease: premiumEase }}
+              className="pt-8 md:pt-0"
+            >
+              <div className="font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4">
+                <Counter value={2.5} decimals={1} prefix="£" suffix="B+" />
+              </div>
               <p className="font-sans text-sm tracking-widest uppercase text-white/80">Advised Transactions</p>
-            </div>
-            <div className="pt-8 md:pt-0">
-              <div className="metric-number font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4" data-target="40+">0</div>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, delay: 0.15, ease: premiumEase }}
+              className="pt-8 md:pt-0"
+            >
+              <div className="font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4">
+                <Counter value={40} suffix="+" />
+              </div>
               <p className="font-sans text-sm tracking-widest uppercase text-white/80">Years Combined Experience</p>
-            </div>
-            <div className="pt-8 md:pt-0">
-              <div className="metric-number font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4" data-target="100%">0</div>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 25 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: premiumEase }}
+              className="pt-8 md:pt-0"
+            >
+              <div className="font-serif text-6xl md:text-7xl font-bold text-tertiary mb-4">
+                <Counter value={100} suffix="%" />
+              </div>
               <p className="font-sans text-sm tracking-widest uppercase text-white/80">Client Discretion</p>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* 4. Process Timeline */}
-      <section className="py-32 bg-surface-container-low" ref={processRef}>
+      <section ref={processRef} className="py-32 bg-surface-container-low">
         <div className="container max-w-5xl">
           <div className="text-center mb-20">
             <h2 className="font-serif text-4xl font-semibold text-primary">Our Process</h2>
@@ -184,42 +280,61 @@ export default function Services() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
             <div className="hidden md:block absolute top-8 left-0 w-full h-[1px] bg-outline/20"></div>
             
-            <div className="process-step relative bg-background p-8 border border-outline/10 hover:border-tertiary transition-colors duration-500 z-10">
-              <div className="w-16 h-16 bg-primary flex items-center justify-center text-tertiary font-serif text-2xl font-bold mb-8">1</div>
-              <h3 className="font-serif text-2xl font-semibold text-primary mb-4">Consultation</h3>
-              <p className="font-sans text-secondary/80 leading-relaxed text-sm">
-                A highly confidential meeting to understand your exact requirements, long-term goals, and risk profile. We assess your brief against current market realities.
-              </p>
-            </div>
-
-            <div className="process-step relative bg-background p-8 border border-outline/10 hover:border-tertiary transition-colors duration-500 z-10 md:translate-y-8">
-              <div className="w-16 h-16 bg-primary flex items-center justify-center text-tertiary font-serif text-2xl font-bold mb-8">2</div>
-              <h3 className="font-serif text-2xl font-semibold text-primary mb-4">Strategy</h3>
-              <p className="font-sans text-secondary/80 leading-relaxed text-sm">
-                Deploying our proprietary analytics and extensive off-market network, we formulate a bespoke strategy, shortlisting unparalleled opportunities.
-              </p>
-            </div>
-
-            <div className="process-step relative bg-background p-8 border border-outline/10 hover:border-tertiary transition-colors duration-500 z-10">
-              <div className="w-16 h-16 bg-primary flex items-center justify-center text-tertiary font-serif text-2xl font-bold mb-8">3</div>
-              <h3 className="font-serif text-2xl font-semibold text-primary mb-4">Execution</h3>
-              <p className="font-sans text-secondary/80 leading-relaxed text-sm">
-                From aggressive negotiation to overseeing complex legal due diligence, we manage the entire transaction with surgical precision until completion.
-              </p>
-            </div>
+            {[
+              {
+                step: 1,
+                title: "Consultation",
+                desc: "A highly confidential meeting to understand your exact requirements, long-term goals, and risk profile. We assess your brief against current market realities.",
+                shift: false
+              },
+              {
+                step: 2,
+                title: "Strategy",
+                desc: "Deploying our proprietary analytics and extensive off-market network, we formulate a bespoke strategy, shortlisting unparalleled opportunities.",
+                shift: true
+              },
+              {
+                step: 3,
+                title: "Execution",
+                desc: "From aggressive negotiation to overseeing complex legal due diligence, we manage the entire transaction with surgical precision until completion.",
+                shift: false
+              }
+            ].map((proc, idx) => (
+              <motion.div
+                key={proc.step}
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.7, delay: shouldReduceMotion ? 0 : idx * 0.15, ease: premiumEase }}
+                className={`relative bg-background p-8 border border-outline/10 hover:border-tertiary transition-colors duration-500 z-10 ${proc.shift ? 'md:translate-y-8' : ''}`}
+              >
+                <div className="w-16 h-16 bg-primary flex items-center justify-center text-tertiary font-serif text-2xl font-bold mb-8">{proc.step}</div>
+                <h3 className="font-serif text-2xl font-semibold text-primary mb-4">{proc.title}</h3>
+                <p className="font-sans text-secondary/80 leading-relaxed text-sm">
+                  {proc.desc}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* 5. CTA Section */}
       <section className="py-24 bg-background border-t border-outline/10 text-center">
-        <div className="container max-w-3xl">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={scaleRevealVariants}
+          custom={{ delay: 0, duration: 0.8 }}
+          className="container max-w-3xl"
+        >
           <h2 className="font-serif text-4xl md:text-5xl font-semibold text-primary mb-6">Require Bespoke Counsel?</h2>
           <p className="font-sans text-lg text-secondary/80 mb-10 leading-relaxed">
             Contact our senior advisory team to discuss how we can assist with your real estate portfolio.
           </p>
           <Button variant="primary" href="/contact">Schedule Consultation</Button>
-        </div>
+        </motion.div>
       </section>
     </div>
   );
