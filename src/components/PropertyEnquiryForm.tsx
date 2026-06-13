@@ -92,35 +92,35 @@ export function PropertyEnquiryForm({ propertyId, propertyTitle }: PropertyEnqui
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 font-sans">
       <div>
-        <label className="block text-xs font-semibold tracking-widest uppercase text-primary mb-2">Name</label>
+        <label className="block text-xs font-semibold tracking-widest uppercase text-tertiary mb-2">Name</label>
         <input 
           type="text" 
           required
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors text-primary" 
+          className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors text-white" 
           placeholder="Full Name" 
         />
       </div>
       <div>
-        <label className="block text-xs font-semibold tracking-widest uppercase text-primary mb-2 mt-4">Email</label>
+        <label className="block text-xs font-semibold tracking-widest uppercase text-tertiary mb-2 mt-4">Email</label>
         <input 
           type="email" 
           required
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors text-primary" 
+          className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors text-white" 
           placeholder="Email Address" 
         />
       </div>
       <div>
-        <label className="block text-xs font-semibold tracking-widest uppercase text-primary mb-2 mt-4">Phone</label>
+        <label className="block text-xs font-semibold tracking-widest uppercase text-tertiary mb-2 mt-4">Phone</label>
         <input 
           type="tel" 
           required
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors text-primary" 
+          className="w-full bg-transparent border-b border-outline/30 pb-2 focus:outline-none focus:border-tertiary transition-colors text-white" 
           placeholder="Phone Number" 
         />
       </div>

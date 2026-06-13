@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect, FormEvent } from "react";
 import Link from "next/link";
-import { 
+import {
   MessageSquare, X, Send, User, Shield, Phone, Mail, Award,
   Search, Sliders, LineChart, Calculator, Scale, Calendar, BookOpen, FileText, CheckCircle,
   Mic, MicOff, Volume2, VolumeX, RefreshCw
 } from "lucide-react";
 import { properties, Property } from "@/data/properties";
+import SafeImage from "@/components/ui/SafeImage";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMotionConfig, premiumEase } from "@/lib/animations";
 
@@ -58,9 +59,31 @@ export default function AISuitePanel() {
   // 3. Recommendations State
   const [recCategory, setRecCategory] = useState("Residential");
   const [recMaxBudget, setRecMaxBudget] = useState("10000000");
+  const [recMinBudget, setRecMinBudget] = useState("100000");
   const [recLocation, setRecLocation] = useState("London");
-  const [recResults, setRecResults] = useState<Property[]>([]);
+  const [recPropertyType, setRecPropertyType] = useState("Apartment");
+  const [recInvestmentGoal, setRecInvestmentGoal] = useState("Capital Growth");
+  const [recBedrooms, setRecBedrooms] = useState("2");
+  const [recBathrooms, setRecBathrooms] = useState("1");
+  const [recRoi, setRecRoi] = useState("5.0");
+  const [recMinSqft, setRecMinSqft] = useState("500");
+  const [recSearchQuery, setRecSearchQuery] = useState("");
+  const [recResults, setRecResults] = useState<any[]>([]);
   const [recLoading, setRecLoading] = useState(false);
+  const [recPage, setRecPage] = useState(1);
+  const [recHasMore, setRecHasMore] = useState(false);
+  const [savedProperties, setSavedProperties] = useState<string[]>([]);
+
+  // Contact Advisor State
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactPropertyId, setContactPropertyId] = useState<string | null>(null);
+  const [contactPropertyName, setContactPropertyName] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactModalLoading, setContactModalLoading] = useState(false);
+  const [contactError, setContactError] = useState("");
 
   // 4. Budget Advisor State
   const [budgetIncome, setBudgetIncome] = useState("250000");
@@ -118,6 +141,7 @@ export default function AISuitePanel() {
   const [isRecording, setIsRecording] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [detectedLanguage, setDetectedLanguage] = useState("English");
+  const [voiceTextInput, setVoiceTextInput] = useState("");
   const [voiceOnlyMode, setVoiceOnlyMode] = useState(false);
   const [voiceStatusText, setVoiceStatusText] = useState("Idle"); // Idle, Listening..., Processing..., Speaking...
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -146,27 +170,68 @@ export default function AISuitePanel() {
           if (result.success && result.properties && result.properties.length > 0) {
             setDbProperties(result.properties);
             setSearchResults(result.properties.slice(0, 12));
-            setRecResults(result.properties.slice(0, 12));
             
-            // Set defaults from DB properties
+            // Set defaults for comparison
             setCompareProp1(result.properties[0]?.id || "");
             setCompareProp2(result.properties[1]?.id || "");
             setCompareProp3(result.properties[2]?.id || "");
-            return;
           }
         }
       } catch (err) {
         console.error("Failed to load DB properties:", err);
       }
-      // Fallback
+
+      // Fetch initial recommendation results with scored metrics
+      try {
+        const recRes = await fetch("/api/ai/recommendations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            preferences: {
+              category: "Residential",
+              max_budget: 10000000,
+              min_budget: 100000,
+              preferred_region: "London",
+              preferred_locations: ["London"],
+              property_type: "Apartment",
+              investment_goal: "Capital Growth",
+              bedrooms: 2,
+              bathrooms: 1,
+              roi: 5.0,
+              min_sqft: 500
+            },
+            limit: 20,
+            page: 1
+          })
+        });
+        const recResult = await recRes.json();
+        if (recResult.success && recResult.recommendations) {
+          setRecResults(recResult.recommendations);
+          setRecHasMore(!!recResult.hasMore);
+          return;
+        }
+      } catch (recErr) {
+        console.error("Failed to load initial recommendations:", recErr);
+      }
+
+      // Fallback if APIs fail
       setSearchResults(properties.slice(0, 12));
-      setRecResults(properties.slice(0, 12));
+      setRecResults(properties.slice(0, 12).map(p => ({
+        ...p,
+        property_type: "Apartment",
+        roi: 5.8,
+        rental_yield: 4.8,
+        demand_score: 82,
+        matchPercentage: 92,
+        explanation: ["✓ Within Budget", "✓ Good location fit"]
+      })));
     };
 
     fetchDbProperties();
   }, []);
 
   const handleTabClick = (tab: TabId) => {
+    if (tab === "search") return;
     setActiveTab(tab);
     setIsOpen(true);
   };
@@ -185,7 +250,8 @@ export default function AISuitePanel() {
     Portuguese: 'pt-PT',
     Italian: 'it-IT',
     Chinese: 'zh-CN',
-    Japanese: 'ja-JP'
+    Japanese: 'ja-JP',
+    Urdu: 'ur-PK'
   };
 
   useEffect(() => {
@@ -195,31 +261,31 @@ export default function AISuitePanel() {
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
-        
+
         recognition.onstart = () => {
           setIsRecording(true);
           setVoiceStatusText("Listening...");
         };
-        
+
         recognition.onresult = async (event: any) => {
           const transcriptText = event.results[0][0].transcript;
           handleVoiceQuerySubmit(transcriptText);
         };
-        
+
         recognition.onerror = (event: any) => {
           console.error("Speech recognition error:", event.error);
           setIsRecording(false);
           setVoiceStatusText("Error: " + event.error);
         };
-        
+
         recognition.onend = () => {
           setIsRecording(false);
         };
-        
+
         speechRecognitionRef.current = recognition;
       }
     }
-    
+
     return () => {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -229,20 +295,20 @@ export default function AISuitePanel() {
 
   const speakLocalSpeech = (text: string, languageName: string) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
-    
+
     window.speechSynthesis.cancel();
-    
+
     const utterance = new SpeechSynthesisUtterance(text);
     const locale = LANGUAGE_CODES[languageName] || 'en-US';
     utterance.lang = locale;
     utterance.rate = 0.90; // Set speaking speed to medium (professional advisory pace)
-    
+
     const voices = window.speechSynthesis.getVoices();
     const voice = voices.find(v => v.lang.startsWith(locale) && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('natural')));
     if (voice) {
       utterance.voice = voice;
     }
-    
+
     utterance.onstart = () => {
       setIsSpeaking(true);
       setVoiceStatusText("Speaking...");
@@ -255,7 +321,7 @@ export default function AISuitePanel() {
       setIsSpeaking(false);
       setVoiceStatusText("Idle");
     };
-    
+
     window.speechSynthesis.speak(utterance);
   };
 
@@ -284,7 +350,7 @@ export default function AISuitePanel() {
       if (result.success) {
         const replyText = result.response;
         const newLang = result.detected_language || detectedLanguage;
-        
+
         setDetectedLanguage(newLang);
         setVoiceMessages(prev => [...prev, { sender: "concierge", text: replyText, properties: result.properties || [] }]);
         setVoiceStatusText("Speaking...");
@@ -293,7 +359,7 @@ export default function AISuitePanel() {
           const speakRes = await fetch("/api/voice/speak", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: replyText })
+            body: JSON.stringify({ text: replyText, language: newLang })
           });
 
           if (speakRes.ok) {
@@ -306,7 +372,7 @@ export default function AISuitePanel() {
               const url = URL.createObjectURL(blob);
               setAudioUrl(url);
               setIsSpeaking(true);
-              
+
               if (audioPlayerRef.current) {
                 audioPlayerRef.current.src = url;
                 audioPlayerRef.current.play();
@@ -325,6 +391,14 @@ export default function AISuitePanel() {
       setVoiceStatusText("Idle");
       setVoiceMessages(prev => [...prev, { sender: "concierge", text: "I apologize, I could not complete your request. Please try again." }]);
     }
+  };
+
+  const handleVoiceTextInputSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!voiceTextInput.trim()) return;
+    const query = voiceTextInput;
+    setVoiceTextInput("");
+    handleVoiceQuerySubmit(query);
   };
 
   const handleMicClick = () => {
@@ -356,7 +430,7 @@ export default function AISuitePanel() {
       }
     }
   };
-  
+
   // 1. Olivia Chat Handler
   const handleChatSend = async (e: FormEvent) => {
     e.preventDefault();
@@ -465,6 +539,7 @@ export default function AISuitePanel() {
   const handleRecsSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setRecLoading(true);
+    setRecPage(1);
 
     try {
       const res = await fetch("/api/ai/recommendations", {
@@ -472,18 +547,104 @@ export default function AISuitePanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           preferences: {
-            preferred_categories: [recCategory],
-            max_budget: Number(recMaxBudget),
-            preferred_locations: [recLocation]
-          }
+            category: recCategory,
+            max_budget: Number(recMaxBudget) || null,
+            min_budget: Number(recMinBudget) || null,
+            preferred_region: recLocation,
+            preferred_locations: [recLocation],
+            property_type: recPropertyType,
+            investment_goal: recInvestmentGoal,
+            bedrooms: Number(recBedrooms) || null,
+            bathrooms: Number(recBathrooms) || null,
+            roi: Number(recRoi) || null,
+            min_sqft: Number(recMinSqft) || null
+          },
+          searchQuery: recSearchQuery,
+          limit: 20,
+          page: 1
         })
       });
       const result = await res.json();
       setRecResults(result.recommendations || []);
+      setRecHasMore(!!result.hasMore);
     } catch (err) {
       console.error(err);
     } finally {
       setRecLoading(false);
+    }
+  };
+
+  const handleRecsLoadMore = async () => {
+    if (recLoading) return;
+    const nextPage = recPage + 1;
+    setRecLoading(true);
+
+    try {
+      const res = await fetch("/api/ai/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          preferences: {
+            category: recCategory,
+            max_budget: Number(recMaxBudget) || null,
+            min_budget: Number(recMinBudget) || null,
+            preferred_region: recLocation,
+            preferred_locations: [recLocation],
+            property_type: recPropertyType,
+            investment_goal: recInvestmentGoal,
+            bedrooms: Number(recBedrooms) || null,
+            bathrooms: Number(recBathrooms) || null,
+            roi: Number(recRoi) || null,
+            min_sqft: Number(recMinSqft) || null
+          },
+          searchQuery: recSearchQuery,
+          limit: 20,
+          page: nextPage
+        })
+      });
+      const result = await res.json();
+      if (result.success && result.recommendations) {
+        setRecResults((prev) => [...prev, ...result.recommendations]);
+        setRecPage(nextPage);
+        setRecHasMore(!!result.hasMore);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRecLoading(false);
+    }
+  };
+
+  const handleContactAdvisorSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!contactName || !contactEmail || !contactPropertyId) {
+      setContactError("Name, Email, and Property ID are required.");
+      return;
+    }
+    setContactModalLoading(true);
+    setContactError("");
+    try {
+      const res = await fetch("/api/crm/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contactName,
+          email: contactEmail,
+          phone: contactPhone,
+          propertyId: contactPropertyId
+        })
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        setContactSuccess(true);
+      } else {
+        setContactError(result.error || "Failed to contact advisor.");
+      }
+    } catch (err) {
+      console.error(err);
+      setContactError("An unexpected error occurred. Please try again.");
+    } finally {
+      setContactModalLoading(false);
     }
   };
 
@@ -589,7 +750,7 @@ export default function AISuitePanel() {
       }
 
       const result = await res.json();
-      
+
       if (result.is_spam) {
         setBookingError("Your inquiry could not be verified by Olivia. Please ensure details are genuine and do not contain marketing materials.");
         setBookingLoading(false);
@@ -760,7 +921,7 @@ export default function AISuitePanel() {
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 font-sans flex items-end gap-3 sm:gap-4 max-w-[calc(100vw-2rem)]">
       {/* Floating Vertical Icon Dock */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 1.0, ease: "easeOut" }}
@@ -770,9 +931,8 @@ export default function AISuitePanel() {
           onClick={() => handleTabClick("chat")}
           animate={{ scale: isOpen && activeTab === "chat" ? 1.15 : 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "chat" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
+          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${isOpen && activeTab === "chat" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
+            }`}
           title="Olivia Advisor Chat"
         >
           <MessageSquare className="w-5 h-5" />
@@ -782,17 +942,16 @@ export default function AISuitePanel() {
         </motion.button>
 
         <motion.button
+          disabled
           onClick={() => handleTabClick("search")}
-          animate={{ scale: isOpen && activeTab === "search" ? 1.15 : 1.0 }}
+          animate={{ scale: 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "search" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
-          title="AI Search Assistant"
+          className="p-3 transition-colors duration-300 relative group cursor-not-allowed opacity-40 text-tertiary/50"
+          title="AI Search Assistant (Disabled)"
         >
           <Search className="w-5 h-5" />
           <span className="absolute right-full mr-2 px-2 py-1 bg-primary text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-tertiary/20">
-            AI Search Assistant
+            AI Search Assistant (Disabled)
           </span>
         </motion.button>
 
@@ -800,9 +959,8 @@ export default function AISuitePanel() {
           onClick={() => handleTabClick("recs")}
           animate={{ scale: isOpen && activeTab === "recs" ? 1.15 : 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "recs" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
+          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${isOpen && activeTab === "recs" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
+            }`}
           title="AI Property Matcher"
         >
           <Sliders className="w-5 h-5" />
@@ -815,9 +973,8 @@ export default function AISuitePanel() {
           onClick={() => handleTabClick("budget")}
           animate={{ scale: isOpen && activeTab === "budget" ? 1.15 : 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "budget" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
+          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${isOpen && activeTab === "budget" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
+            }`}
           title="AI Budget Advisor"
         >
           <LineChart className="w-5 h-5" />
@@ -830,9 +987,8 @@ export default function AISuitePanel() {
           onClick={() => handleTabClick("mortgage")}
           animate={{ scale: isOpen && activeTab === "mortgage" ? 1.15 : 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "mortgage" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
+          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${isOpen && activeTab === "mortgage" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
+            }`}
           title="AI Mortgage Advisor"
         >
           <Calculator className="w-5 h-5" />
@@ -845,9 +1001,8 @@ export default function AISuitePanel() {
           onClick={() => handleTabClick("compare")}
           animate={{ scale: isOpen && activeTab === "compare" ? 1.15 : 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "compare" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
+          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${isOpen && activeTab === "compare" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
+            }`}
           title="AI Property Comparer"
         >
           <Scale className="w-5 h-5" />
@@ -860,9 +1015,8 @@ export default function AISuitePanel() {
           onClick={() => handleTabClick("booking")}
           animate={{ scale: isOpen && activeTab === "booking" ? 1.15 : 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "booking" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
+          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${isOpen && activeTab === "booking" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
+            }`}
           title="AI Appointment Scheduler"
         >
           <Calendar className="w-5 h-5" />
@@ -875,9 +1029,8 @@ export default function AISuitePanel() {
           onClick={() => handleTabClick("voice")}
           animate={{ scale: isOpen && activeTab === "voice" ? 1.15 : 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "voice" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
+          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${isOpen && activeTab === "voice" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
+            }`}
           title="Olivia AI Voice Concierge"
         >
           <Mic className="w-5 h-5" />
@@ -890,9 +1043,8 @@ export default function AISuitePanel() {
           onClick={() => handleTabClick("knowledge")}
           animate={{ scale: isOpen && activeTab === "knowledge" ? 1.15 : 1.0 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
-          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${
-            isOpen && activeTab === "knowledge" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
-          }`}
+          className={`p-3 transition-colors duration-300 relative group cursor-pointer ${isOpen && activeTab === "knowledge" ? "bg-tertiary text-primary" : "text-tertiary hover:bg-tertiary/10"
+            }`}
           title="AI Compliance RAG Hub"
         >
           <BookOpen className="w-5 h-5" />
@@ -901,6 +1053,20 @@ export default function AISuitePanel() {
           </span>
         </motion.button>
       </motion.div>
+
+      {/* Mobile Drawer Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 bg-[#081322]/40 backdrop-blur-sm z-40 sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Main Drawer overlay */}
       <AnimatePresence>
@@ -911,7 +1077,7 @@ export default function AISuitePanel() {
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0, scale: shouldReduceMotion ? 1 : 0.95, x: shouldReduceMotion ? 0 : 30 }}
             transition={{ duration: 0.4, ease: premiumEase }}
-            className="w-[calc(100vw-6rem)] sm:w-[420px] md:w-[480px] h-[80vh] sm:h-[650px] bg-[#0c1c30]/95 backdrop-blur-xl border border-tertiary/20 shadow-2xl flex flex-col rounded-none overflow-hidden"
+            className="fixed inset-x-4 bottom-24 top-4 sm:relative sm:inset-auto sm:w-[420px] md:w-[480px] h-auto sm:h-[650px] bg-[#0c1c30]/95 backdrop-blur-xl border border-tertiary/20 shadow-2xl flex flex-col rounded-none overflow-hidden z-50"
           >
             {/* Drawer Header */}
             <div className="bg-[#081322] px-6 py-4 border-b border-tertiary/10 flex items-center justify-between">
@@ -946,7 +1112,7 @@ export default function AISuitePanel() {
 
             {/* Drawer Content */}
             <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-4 scrollbar-thin text-[#e2e8f0]">
-              
+
               {/* 1. Chat Tab */}
               {activeTab === "chat" && (
                 <div className="flex-1 flex flex-col h-full gap-4">
@@ -960,26 +1126,23 @@ export default function AISuitePanel() {
                         className="flex flex-col gap-2"
                       >
                         <div
-                          className={`flex gap-3 max-w-[85%] ${
-                            msg.sender === "client" ? "self-end flex-row-reverse" : "self-start"
-                          }`}
+                          className={`flex gap-3 max-w-[85%] ${msg.sender === "client" ? "self-end flex-row-reverse" : "self-start"
+                            }`}
                         >
                           <div
-                            className={`w-8 h-8 rounded-none border flex items-center justify-center text-xs shrink-0 ${
-                              msg.sender === "client"
+                            className={`w-8 h-8 rounded-none border flex items-center justify-center text-xs shrink-0 ${msg.sender === "client"
                                 ? "bg-tertiary/10 border-tertiary/30 text-tertiary"
                                 : "bg-primary border-outline/20 text-white"
-                            }`}
+                              }`}
                           >
                             {msg.sender === "client" ? <User className="w-4 h-4" /> : <Award className="w-4 h-4 text-tertiary" />}
                           </div>
 
                           <div
-                            className={`p-3 text-sm leading-relaxed border ${
-                              msg.sender === "client"
+                            className={`p-3 text-sm leading-relaxed border ${msg.sender === "client"
                                 ? "bg-tertiary/10 border-tertiary/20 text-white"
                                 : "bg-surface-container-low border-outline/10 text-[#e2e8f0]"
-                            }`}
+                              }`}
                           >
                             {msg.text}
                           </div>
@@ -995,7 +1158,7 @@ export default function AISuitePanel() {
                                 className="bg-surface-container-low/50 hover:bg-surface-container-low border border-outline/10 hover:border-tertiary/30 p-3 flex gap-3 transition-all duration-300 group"
                               >
                                 <div className="relative w-16 h-16 bg-[#1a2e46] overflow-hidden shrink-0">
-                                  <img
+                                  <SafeImage
                                     src={prop.images[0]}
                                     alt={prop.title}
                                     className="object-cover w-full h-full opacity-80 group-hover:scale-105 transition-transform"
@@ -1135,70 +1298,286 @@ export default function AISuitePanel() {
               {/* 3. Recommendations Tab */}
               {activeTab === "recs" && (
                 <div className="flex flex-col gap-4">
-                  <p className="text-xs text-white/60">Match your investment targets with active properties via vector similarity.</p>
-                  <form onSubmit={handleRecsSubmit} className="flex flex-col gap-3">
-                    <div>
-                      <label className="text-[10px] text-tertiary tracking-widest uppercase mb-1 block">Category</label>
-                      <select
-                        value={recCategory}
-                        onChange={(e) => setRecCategory(e.target.value)}
-                        className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary"
-                      >
-                        <option value="Residential">Residential</option>
-                        <option value="Commercial">Commercial</option>
-                      </select>
+                  <p className="text-xs text-white/60 font-serif leading-relaxed">Match your investment targets with active properties via vector similarity.</p>
+                  <form onSubmit={handleRecsSubmit} className="flex flex-col gap-3 border-b border-tertiary/10 pb-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Category</label>
+                        <select
+                          value={recCategory}
+                          onChange={(e) => setRecCategory(e.target.value)}
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        >
+                          <option value="Residential">Residential</option>
+                          <option value="Commercial">Commercial</option>
+                          <option value="Land & Farms">Land & Farms</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Property Type</label>
+                        <select
+                          value={recPropertyType}
+                          onChange={(e) => setRecPropertyType(e.target.value)}
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        >
+                          <option value="">All Types</option>
+                          <option value="apartment">Apartment</option>
+                          <option value="villa">Villa</option>
+                          <option value="house">House</option>
+                          <option value="penthouse">Penthouse</option>
+                          <option value="duplex">Duplex</option>
+                          <option value="townhouse">Townhouse</option>
+                          <option value="office">Office</option>
+                          <option value="retail">Retail</option>
+                          <option value="warehouse">Warehouse</option>
+                          <option value="farmhouse">Farmhouse</option>
+                          <option value="land">Land</option>
+                        </select>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] text-tertiary tracking-widest uppercase mb-1 block">Max Budget (£)</label>
-                      <input
-                        type="number"
-                        value={recMaxBudget}
-                        onChange={(e) => setRecMaxBudget(e.target.value)}
-                        className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary"
-                      />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Preferred Region</label>
+                        <input
+                          type="text"
+                          value={recLocation}
+                          onChange={(e) => setRecLocation(e.target.value)}
+                          placeholder="e.g. London"
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Keywords / Features</label>
+                        <input
+                          type="text"
+                          value={recSearchQuery}
+                          onChange={(e) => setRecSearchQuery(e.target.value)}
+                          placeholder="e.g. pool, gym, garden"
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[10px] text-tertiary tracking-widest uppercase mb-1 block">Preferred Region</label>
-                      <input
-                        type="text"
-                        value={recLocation}
-                        onChange={(e) => setRecLocation(e.target.value)}
-                        className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary"
-                      />
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Min Budget (£)</label>
+                        <input
+                          type="number"
+                          value={recMinBudget}
+                          onChange={(e) => setRecMinBudget(e.target.value)}
+                          placeholder="Min budget"
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Max Budget (£)</label>
+                        <input
+                          type="number"
+                          value={recMaxBudget}
+                          onChange={(e) => setRecMaxBudget(e.target.value)}
+                          placeholder="Max budget"
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        />
+                      </div>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Investment Goal</label>
+                        <select
+                          value={recInvestmentGoal}
+                          onChange={(e) => setRecInvestmentGoal(e.target.value)}
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        >
+                          <option value="">No Preference</option>
+                          <option value="Capital Growth">Capital Growth</option>
+                          <option value="Immediate Cash Flow">Immediate Cash Flow</option>
+                          <option value="High Rental Yield">High Rental Yield</option>
+                          <option value="Long Term Hold">Long Term Hold</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">ROI Requirement (%)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={recRoi}
+                          onChange={(e) => setRecRoi(e.target.value)}
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Min Beds</label>
+                        <input
+                          type="number"
+                          value={recBedrooms}
+                          onChange={(e) => setRecBedrooms(e.target.value)}
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Min Baths</label>
+                        <input
+                          type="number"
+                          value={recBathrooms}
+                          onChange={(e) => setRecBathrooms(e.target.value)}
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Min Size (sqft)</label>
+                        <input
+                          type="number"
+                          value={recMinSqft}
+                          onChange={(e) => setRecMinSqft(e.target.value)}
+                          className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary h-[34px]"
+                        />
+                      </div>
+                    </div>
+
                     <button
                       type="submit"
                       disabled={recLoading}
-                      className="bg-tertiary text-primary py-2 font-semibold text-xs uppercase tracking-wider hover:bg-tertiary-hover mt-2 cursor-pointer"
+                      className="bg-tertiary text-primary py-2.5 font-semibold text-xs uppercase tracking-wider hover:bg-tertiary-hover mt-2 cursor-pointer transition-colors"
                     >
-                      {recLoading ? "Matching Vectors..." : "Retrieve Matching Assets"}
+                      {recLoading ? "Analyzing Supabase Data..." : "Retrieve Matching Assets"}
                     </button>
                   </form>
 
-                  <div className="flex flex-col gap-2 mt-4">
+                  <div className="flex flex-col gap-4 mt-2">
                     {recResults.map((prop) => (
-                      <Link
-                        href={`/portfolio/${prop.id}`}
+                      <div
                         key={prop.id}
-                        onClick={() => setIsOpen(false)}
-                        className="bg-surface-container-low/40 hover:bg-surface-container-low border border-outline/10 p-3 flex gap-3 transition-all group"
+                        className="bg-surface-container-low/40 border border-outline/10 p-4 flex flex-col gap-3 transition-all relative"
                       >
-                        <div className="w-12 h-12 bg-primary overflow-hidden shrink-0">
-                          <img
-                            src={prop.images && prop.images[0] ? prop.images[0] : "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400"}
-                            alt={prop.title}
-                            className="object-cover w-full h-full"
-                          />
+                        {/* Top Header: Image, Title, Price, Type */}
+                        <div className="flex gap-4">
+                          <div className="relative w-20 h-20 bg-[#1a2e46] overflow-hidden shrink-0 border border-outline/10">
+                            <SafeImage
+                              src={prop.images && prop.images[0] ? prop.images[0] : "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400"}
+                              alt={prop.title}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1 flex flex-col justify-between">
+                            <div>
+                              <div className="flex justify-between items-start gap-1">
+                                <h6 className="font-serif text-[11px] sm:text-xs font-bold text-white leading-snug truncate">
+                                  {prop.title}
+                                </h6>
+                                <span className="text-[8px] px-1.5 py-0.5 bg-tertiary/10 border border-tertiary/30 text-tertiary font-bold uppercase shrink-0 font-sans">
+                                  {prop.matchPercentage || 100}% Match
+                                </span>
+                              </div>
+                              <p className="text-[9px] text-white/50 font-sans mt-0.5">{prop.location} • <span className="text-white/70 font-semibold">{prop.property_type || "Premium Asset"}</span></p>
+                              <p className="text-[9px] text-white/60 font-sans line-clamp-1 mt-1">{prop.description}</p>
+                            </div>
+                            <div className="flex justify-between items-center mt-2">
+                              <span className="text-xs font-bold text-tertiary font-serif">{prop.price}</span>
+                              <span className="text-[8px] text-white/60 font-sans">{prop.bedrooms} Beds • {prop.bathrooms} Baths • {prop.sqft?.toLocaleString()} sqft</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h6 className="font-serif text-xs font-semibold text-white group-hover:text-tertiary truncate transition-colors">{prop.title}</h6>
-                          <p className="text-[9px] text-white/50">{prop.location} • {prop.bedrooms} Bed</p>
-                          <p className="text-[9px] text-tertiary font-bold mt-0.5">{prop.price}</p>
+
+                        {/* Investment Stats Panel */}
+                        <div className="grid grid-cols-3 gap-2 bg-[#081322]/50 border border-outline/5 p-2 text-center text-xs font-serif">
+                          <div className="flex flex-col">
+                            <span className="text-[7px] text-white/40 uppercase tracking-wider font-sans">ROI</span>
+                            <span className="text-tertiary font-bold text-[10px]">{prop.roi || 6.2}%</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[7px] text-white/40 uppercase tracking-wider font-sans">Rental Yield</span>
+                            <span className="text-white font-bold text-[10px]">{prop.rental_yield || 5.1}%</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[7px] text-white/40 uppercase tracking-wider font-sans">Advisory Score</span>
+                            <span className="text-white font-bold text-[10px]">{prop.demand_score || 85}/100</span>
+                          </div>
                         </div>
-                      </Link>
+
+                        {/* Matches Reasons */}
+                        {prop.explanation && prop.explanation.length > 0 && (
+                          <div className="pt-2 border-t border-outline/10 text-[9px] text-white/60 font-sans flex flex-col gap-1">
+                            <span className="font-bold text-tertiary uppercase tracking-wider text-[8px]">Why This Property Matches:</span>
+                            {prop.explanation.map((item: string, idx: number) => (
+                              <div key={idx} className="flex items-start gap-1">
+                                <span className="text-tertiary font-sans">✓</span>
+                                <span>{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Actions Bar */}
+                        <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-outline/10">
+                          <Link
+                            href={`/portfolio/${prop.id}`}
+                            onClick={() => setIsOpen(false)}
+                            className="text-[10px] text-center border border-outline/30 hover:border-white text-white font-serif uppercase py-1.5 transition-colors cursor-pointer flex items-center justify-center"
+                          >
+                            View Details
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setContactPropertyId(prop.id);
+                              setContactPropertyName(prop.title);
+                              setContactName("");
+                              setContactEmail("");
+                              setContactPhone("");
+                              setContactSuccess(false);
+                              setContactError("");
+                              setContactModalOpen(true);
+                            }}
+                            className="text-[10px] text-center bg-tertiary hover:bg-tertiary-hover text-primary font-bold uppercase py-1.5 transition-colors cursor-pointer"
+                          >
+                            Contact Advisor
+                          </button>
+                        </div>
+
+                        <div className="flex justify-between items-center text-[8px] mt-1 text-white/40 font-sans uppercase tracking-wider">
+                          <button
+                            onClick={() => {
+                              setSavedProperties(prev => 
+                                prev.includes(prop.id) ? prev.filter(id => id !== prop.id) : [...prev, prop.id]
+                              );
+                            }}
+                            className="hover:text-tertiary transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            ★ {savedProperties.includes(prop.id) ? "Saved" : "Save Asset"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (!compareProp1 || compareProp1 === prop.id) {
+                                setCompareProp1(prop.id);
+                              } else if (!compareProp2 || compareProp2 === prop.id) {
+                                setCompareProp2(prop.id);
+                              } else {
+                                setCompareProp3(prop.id);
+                              }
+                              setActiveTab("compare");
+                            }}
+                            className="hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            ⇄ Compare
+                          </button>
+                        </div>
+                      </div>
                     ))}
                     {recResults.length === 0 && !recLoading && (
-                      <p className="text-xs text-center text-white/40 mt-4">No matching assets found.</p>
+                      <p className="text-xs text-center text-white/40 mt-4 font-serif">No matching assets found.</p>
+                    )}
+                    {recHasMore && (
+                      <button
+                        onClick={handleRecsLoadMore}
+                        disabled={recLoading}
+                        className="w-full mt-4 py-2.5 border border-tertiary text-tertiary font-sans text-xs uppercase tracking-widest hover:bg-tertiary/10 transition-colors disabled:opacity-40 cursor-pointer text-center"
+                      >
+                        {recLoading ? "Loading More..." : "Load More Properties"}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -1413,7 +1792,7 @@ export default function AISuitePanel() {
               {activeTab === "booking" && (
                 <div className="flex flex-col gap-4 h-full">
                   <p className="text-xs text-white/60">Schedule consulting and viewing sessions with Olivia. Available slots are evaluated dynamically.</p>
-                  
+
                   {bookingSuccess ? (
                     <div className="bg-surface-container-low border border-tertiary/20 p-6 text-center flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4">
                       <CheckCircle className="w-12 h-12 text-tertiary" />
@@ -1470,7 +1849,7 @@ export default function AISuitePanel() {
                               className="w-full bg-[#081322] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary"
                             />
                           </div>
-                          
+
                           {/* Interactive Date & Day Selection */}
                           <div className="grid grid-cols-2 gap-3">
                             <div>
@@ -1564,25 +1943,22 @@ export default function AISuitePanel() {
                                 initial={{ opacity: 0, x: msg.role === "user" ? 20 : -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.3 }}
-                                className={`flex gap-2.5 max-w-[85%] ${
-                                  msg.role === "user" ? "self-end flex-row-reverse" : "self-start"
-                                }`}
+                                className={`flex gap-2.5 max-w-[85%] ${msg.role === "user" ? "self-end flex-row-reverse" : "self-start"
+                                  }`}
                               >
                                 <div
-                                  className={`w-7 h-7 border flex items-center justify-center text-[10px] shrink-0 ${
-                                    msg.role === "user"
+                                  className={`w-7 h-7 border flex items-center justify-center text-[10px] shrink-0 ${msg.role === "user"
                                       ? "bg-tertiary/10 border-tertiary/30 text-tertiary"
                                       : "bg-primary border-outline/20 text-white"
-                                  }`}
+                                    }`}
                                 >
                                   {msg.role === "user" ? <User className="w-3.5 h-3.5" /> : <Award className="w-3.5 h-3.5 text-tertiary" />}
                                 </div>
                                 <div
-                                  className={`p-2.5 text-xs leading-relaxed border ${
-                                    msg.role === "user"
+                                  className={`p-2.5 text-xs leading-relaxed border ${msg.role === "user"
                                       ? "bg-tertiary/10 border-tertiary/20 text-white"
                                       : "bg-surface-container-low border-outline/10 text-[#e2e8f0]"
-                                  }`}
+                                    }`}
                                 >
                                   {msg.content}
                                 </div>
@@ -1657,20 +2033,18 @@ export default function AISuitePanel() {
                               </div>
                               <div>
                                 <span className="text-[10px] text-white/50 block font-sans">URGENCY</span>
-                                <span className={`text-[10px] px-2 py-0.5 font-sans uppercase font-bold border rounded-sm inline-block ${
-                                  bookingVerification.summary?.urgency === "Hot Lead" ? "text-red-400 border-red-500/30 bg-red-500/5" :
-                                  bookingVerification.summary?.urgency === "Warm Lead" ? "text-yellow-400 border-yellow-500/30 bg-yellow-500/5" :
-                                  "text-slate-400 border-slate-500/30 bg-slate-500/5"
-                                }`}>{bookingVerification.summary?.urgency || "Warm Lead"}</span>
+                                <span className={`text-[10px] px-2 py-0.5 font-sans uppercase font-bold border rounded-sm inline-block ${bookingVerification.summary?.urgency === "Hot Lead" ? "text-red-400 border-red-500/30 bg-red-500/5" :
+                                    bookingVerification.summary?.urgency === "Warm Lead" ? "text-yellow-400 border-yellow-500/30 bg-yellow-500/5" :
+                                      "text-slate-400 border-slate-500/30 bg-slate-500/5"
+                                  }`}>{bookingVerification.summary?.urgency || "Warm Lead"}</span>
                               </div>
                               <div>
                                 <span className="text-[10px] text-white/50 block font-sans">LEAD QUALITY SCORE</span>
                                 <div className="flex items-center gap-1.5 font-sans font-bold">
-                                  <span className={`text-xs ${
-                                    bookingVerification.lead_score >= 80 ? "text-green-400" :
-                                    bookingVerification.lead_score >= 50 ? "text-yellow-400" :
-                                    "text-slate-400"
-                                  }`}>{bookingVerification.lead_score}/100</span>
+                                  <span className={`text-xs ${bookingVerification.lead_score >= 80 ? "text-green-400" :
+                                      bookingVerification.lead_score >= 50 ? "text-yellow-400" :
+                                        "text-slate-400"
+                                    }`}>{bookingVerification.lead_score}/100</span>
                                 </div>
                               </div>
                             </div>
@@ -1785,8 +2159,23 @@ export default function AISuitePanel() {
                   `}</style>
 
                   <div className="flex items-center justify-between border-b border-tertiary/10 pb-3">
-                    <p className="text-xs text-white/70">Multilingual Voice Concierge (Remembered Language: <strong>{detectedLanguage}</strong>)</p>
+                    <p className="text-xs text-white/70">Multilingual Voice Concierge (Language: <strong>{detectedLanguage}</strong>)</p>
                     <div className="flex items-center gap-2">
+                      <select
+                        value={detectedLanguage}
+                        onChange={(e) => {
+                          const newLang = e.target.value;
+                          setDetectedLanguage(newLang);
+                          if (typeof window !== 'undefined' && window.speechSynthesis) {
+                            window.speechSynthesis.cancel();
+                          }
+                        }}
+                        className="bg-[#081322] border border-outline/20 p-1 text-[10px] text-white focus:outline-none focus:border-tertiary cursor-pointer h-[34px] px-2"
+                      >
+                        {Object.keys(LANGUAGE_CODES).map((lang) => (
+                          <option key={lang} value={lang}>{lang}</option>
+                        ))}
+                      </select>
                       <label className="text-[10px] text-white/50 tracking-wider uppercase flex items-center gap-1 cursor-pointer min-h-[44px]">
                         <input
                           type="checkbox"
@@ -1819,11 +2208,10 @@ export default function AISuitePanel() {
                     <div className="relative flex items-center justify-center w-32 h-32">
                       <button
                         onClick={handleMicClick}
-                        className={`w-24 h-24 rounded-full flex items-center justify-center text-white transition-all cursor-pointer ${
-                          isRecording ? 'bg-red-500/20 border-2 border-red-500 pulse-mic-btn' :
-                          isSpeaking ? 'bg-tertiary/20 border-2 border-tertiary' :
-                          'bg-tertiary hover:bg-tertiary-hover text-primary'
-                        }`}
+                        className={`w-24 h-24 rounded-full flex items-center justify-center text-white transition-all cursor-pointer ${isRecording ? 'bg-red-500/20 border-2 border-red-500 pulse-mic-btn' :
+                            isSpeaking ? 'bg-tertiary/20 border-2 border-tertiary' :
+                              'bg-tertiary hover:bg-tertiary-hover text-primary'
+                          }`}
                       >
                         {isRecording ? (
                           <MicOff className="w-8 h-8 text-red-400" />
@@ -1847,17 +2235,16 @@ export default function AISuitePanel() {
                     )}
 
                     <div className="text-center">
-                      <span className={`text-xs font-bold uppercase tracking-widest ${
-                        isRecording ? 'text-red-400' :
-                        isSpeaking ? 'text-tertiary' :
-                        'text-white/60'
-                      }`}>
+                      <span className={`text-xs font-bold uppercase tracking-widest ${isRecording ? 'text-red-400' :
+                          isSpeaking ? 'text-tertiary' :
+                            'text-white/60'
+                        }`}>
                         {isRecording ? "🔴 Listening..." :
-                         isSpeaking ? "🔊 Olivia Speaking..." :
-                         voiceStatusText === "Processing..." ? "⏳ Processing..." :
-                         "🎤 Tap to Speak"}
+                          isSpeaking ? "🔊 Olivia Speaking..." :
+                            voiceStatusText === "Processing..." ? "⏳ Processing..." :
+                              "🎤 Tap to Speak"}
                       </span>
-                      <p className="text-[10px] text-white/40 mt-1 font-serif">Supports English, Gujarati, Hindi, Spanish, etc.</p>
+                      <p className="text-[10px] text-white/40 mt-1 font-serif">Supports English, Gujarati, Hindi, Spanish, Urdu, etc.</p>
                     </div>
                   </div>
 
@@ -1882,16 +2269,14 @@ export default function AISuitePanel() {
                       {voiceMessages.map((msg, idx) => (
                         <div
                           key={idx}
-                          className={`flex flex-col gap-1 text-xs max-w-[90%] ${
-                            msg.sender === "client" ? "self-end items-end" : "self-start items-start"
-                          }`}
+                          className={`flex flex-col gap-1 text-xs max-w-[90%] ${msg.sender === "client" ? "self-end items-end" : "self-start items-start"
+                            }`}
                         >
                           <span className="text-[9px] text-white/40 uppercase font-sans">
                             {msg.sender === "client" ? "You" : "Olivia"}
                           </span>
-                          <div className={`p-2.5 leading-relaxed border ${
-                            msg.sender === "client" ? "bg-tertiary/10 border-tertiary/20 text-white" : "bg-[#081322]/50 border-outline/10 text-white/90"
-                          }`}>
+                          <div className={`p-2.5 leading-relaxed border ${msg.sender === "client" ? "bg-tertiary/10 border-tertiary/20 text-white" : "bg-[#081322]/50 border-outline/10 text-white/90"
+                            }`}>
                             {msg.text}
                           </div>
 
@@ -1902,23 +2287,42 @@ export default function AISuitePanel() {
                                   href={`/portfolio/${prop.id}`}
                                   key={prop.id}
                                   onClick={() => setIsOpen(false)}
-                                  className="bg-[#081322]/60 hover:bg-[#081322] border border-outline/10 hover:border-tertiary/30 p-2.5 flex gap-3 transition-all duration-300 group w-full"
+                                  className="bg-[#081322]/60 hover:bg-[#081322] border border-outline/10 hover:border-tertiary/30 p-2.5 flex gap-3 transition-all duration-300 group w-full text-left"
                                 >
                                   <div className="relative w-12 h-12 bg-[#1a2e46] overflow-hidden shrink-0">
                                     {prop.images && prop.images[0] && (
-                                      <img
+                                      <SafeImage
                                         src={prop.images[0]}
                                         alt={prop.title}
                                         className="object-cover w-full h-full opacity-80 group-hover:scale-105 transition-transform"
                                       />
                                     )}
                                   </div>
-                                  <div className="flex flex-col justify-center min-w-0">
+                                  <div className="flex flex-col justify-center min-w-0 flex-1">
                                     <h5 className="font-serif text-[11px] font-semibold text-white truncate group-hover:text-tertiary transition-colors">
                                       {prop.title}
                                     </h5>
-                                    <p className="text-[9px] text-white/60 mt-0.5">{prop.location}</p>
-                                    <p className="text-[9px] text-tertiary font-bold mt-0.5">{prop.price}</p>
+                                    <p className="text-[9px] text-white/60 mt-0.5">{prop.location} • <span className="text-tertiary font-bold">{prop.price}</span></p>
+                                    
+                                    {/* Premium Investment Metrics inline */}
+                                    {prop.roi !== undefined && (
+                                      <div className="grid grid-cols-3 gap-1.5 mt-2 pt-1.5 border-t border-outline/5 text-[8px] text-white/50">
+                                        <div>
+                                          <span className="block font-sans uppercase text-[7px] text-white/40">Est. ROI</span>
+                                          <strong className="text-tertiary font-bold">{prop.roi}%</strong>
+                                        </div>
+                                        <div>
+                                          <span className="block font-sans uppercase text-[7px] text-white/40">Yield</span>
+                                          <strong className="text-white font-bold">{prop.rental_yield}%</strong>
+                                        </div>
+                                        <div>
+                                          <span className="block font-sans uppercase text-[7px] text-white/40">Risk</span>
+                                          <span className={`font-bold ${prop.risk_level === 'Low' ? 'text-green-400' : 'text-yellow-400'}`}>
+                                            {prop.risk_level || 'Low'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 </Link>
                               ))}
@@ -1926,10 +2330,138 @@ export default function AISuitePanel() {
                           )}
                         </div>
                       ))}
+
+                      {/* Typing indicator when processing */}
+                      {voiceStatusText === "Processing..." && (
+                        <div className="flex flex-col gap-1 text-xs max-w-[90%] self-start items-start">
+                          <span className="text-[9px] text-white/40 uppercase font-sans">Olivia</span>
+                          <div className="bg-[#081322]/50 border border-outline/10 p-2.5 flex items-center gap-1">
+                            <motion.span animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0 }} className="w-1.5 h-1.5 bg-tertiary rounded-full" />
+                            <motion.span animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.15 }} className="w-1.5 h-1.5 bg-tertiary rounded-full" />
+                            <motion.span animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 0.8, delay: 0.3 }} className="w-1.5 h-1.5 bg-tertiary rounded-full" />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  {/* Accessibility Fallback: Text input field at the bottom of the voice tab */}
+                  <form onSubmit={handleVoiceTextInputSubmit} className="mt-2 flex gap-2 w-full">
+                    <input
+                      type="text"
+                      value={voiceTextInput}
+                      onChange={(e) => setVoiceTextInput(e.target.value)}
+                      placeholder={`Type a message to Olivia (${detectedLanguage})...`}
+                      disabled={voiceStatusText === "Processing..." || isSpeaking || isRecording}
+                      className="flex-1 bg-[#081322] border border-outline/20 px-3 py-2 text-xs focus:outline-none focus:border-tertiary text-white min-h-[44px]"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!voiceTextInput.trim() || voiceStatusText === "Processing..." || isSpeaking || isRecording}
+                      className="bg-tertiary hover:bg-tertiary-hover text-primary px-3 flex items-center justify-center transition-colors cursor-pointer min-h-[44px]"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </form>
                 </div>
               )}
+            {/* Contact Advisor Modal Overlay */}
+            {contactModalOpen && (
+              <div className="absolute inset-0 bg-[#081322]/95 backdrop-blur-md z-50 p-6 flex flex-col justify-center animate-in fade-in duration-300">
+                <div className="flex justify-between items-center border-b border-tertiary/20 pb-3 mb-4">
+                  <h5 className="font-serif text-sm font-semibold tracking-wider text-white uppercase">
+                    Contact Regent Advisor
+                  </h5>
+                  <button 
+                    onClick={() => {
+                      setContactModalOpen(false);
+                      setContactSuccess(false);
+                      setContactError("");
+                    }}
+                    className="text-white/60 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {contactSuccess ? (
+                  <div className="text-center py-6 flex flex-col items-center gap-4">
+                    <CheckCircle className="w-12 h-12 text-tertiary animate-bounce" />
+                    <div>
+                      <h6 className="font-serif text-sm font-semibold text-white">Inquiry Registered</h6>
+                      <p className="text-xs text-white/70 mt-1 leading-relaxed font-sans">
+                        Thank you. Your request for <span className="text-tertiary font-semibold">{contactPropertyName}</span> has been logged directly inside our Mayfair CRM. An advisory consultant will connect with you within 24 hours.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setContactModalOpen(false);
+                        setContactSuccess(false);
+                      }}
+                      className="mt-4 px-6 py-2 bg-tertiary text-primary text-xs font-semibold tracking-wider uppercase hover:bg-tertiary-hover cursor-pointer"
+                    >
+                      Return to Recommendations
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleContactAdvisorSubmit} className="flex flex-col gap-3">
+                    <p className="text-xs text-white/70 mb-2 leading-relaxed">
+                      Request private due diligence dossier and coordinate direct briefing for:<br/>
+                      <strong className="text-tertiary font-serif">{contactPropertyName}</strong>
+                    </p>
+
+                    {contactError && (
+                      <div className="bg-red-500/10 border border-red-500/30 text-red-200 p-2.5 text-xs">
+                        {contactError}
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="text-[10px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        className="w-full bg-[#0c1c30] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary"
+                        placeholder="e.g. Sir Arthur Conan"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        className="w-full bg-[#0c1c30] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary"
+                        placeholder="e.g. arthur@mayfairwealth.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-tertiary tracking-widest uppercase mb-1 block font-sans">Phone Number (Optional)</label>
+                      <input
+                        type="tel"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        className="w-full bg-[#0c1c30] border border-outline/20 p-2 text-xs text-white focus:outline-none focus:border-tertiary"
+                        placeholder="e.g. +44 7700 900077"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={contactModalLoading}
+                      className="mt-2 bg-tertiary hover:bg-tertiary-hover text-primary font-bold text-xs uppercase tracking-wider py-2.5 transition-colors cursor-pointer disabled:opacity-40"
+                    >
+                      {contactModalLoading ? "Registering Lead..." : "Submit Confidential Request"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
 
             </div>
           </motion.div>

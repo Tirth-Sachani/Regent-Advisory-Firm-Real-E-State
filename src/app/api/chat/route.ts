@@ -140,12 +140,12 @@ Generate the required JSON output matching the response format specification.
       responseText = "I'd be glad to coordinate a discrete viewing. Let's schedule a brief 10-minute briefing call with my advisory squad above to map out the logistics.";
       leadCaptureRequired = true;
     } else {
-      if (contextProperties.length > 0) {
-        recommendedProperties = contextProperties.slice(0, 3);
+      if (matchedProps.length > 0) {
+        recommendedProperties = matchedProps.slice(0, 3).map(m => m.prop);
         const locationsList = Array.from(new Set(recommendedProperties.map(p => p.location))).join(' and ');
-        responseText = `I have refined our exclusive off-market portfolio and identified ${recommendedProperties.length} exceptional opportunities in ${locationsList}. Shall we schedule a briefing call?`;
+        responseText = `I have found ${recommendedProperties.length} exceptional opportunities matching your requirements in ${locationsList}. Shall we schedule a briefing call?`;
       } else {
-        responseText = "I manage an array of off-market townhouses, riverfront duplexes, and premium workspaces across prime UK zones. Could you specify your yield target or desired location?";
+        responseText = "Could you tell me more about what you're looking for? For example, your preferred location, number of bedrooms, or property style.";
       }
     }
 

@@ -3,14 +3,23 @@ import { NextRequest, NextResponse } from 'next/server';
 // Olivia Voice Concierge Speak Route (TTS)
 export async function POST(req: NextRequest) {
   let text = '';
-  let voice = 'shimmer';
+  let voice = 'nova';
   let speed = 0.92;
   try {
     try {
       const body = await req.json();
       text = body.text || '';
-      voice = body.voice || 'shimmer';
-      speed = body.speed || 0.92;
+      const language = body.language || 'English';
+      
+      // Force voice to nova to ensure voice identity never changes
+      voice = 'nova';
+      
+      // If language is non-English, adjust speed to 0.85 to make the TTS sound more natural and clear
+      if (language && language.toLowerCase() !== 'english') {
+        speed = body.speed || 0.85;
+      } else {
+        speed = body.speed || 0.92;
+      }
     } catch (e) {
       // Ignore parse error
     }

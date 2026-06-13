@@ -30,7 +30,7 @@ Return STRICTLY a JSON object matching this structure:
   "language": "LanguageName",
   "confidence": 0.95
 }
-Where "language" is one of: "English", "Gujarati", "Hindi", "Spanish", "French", "German", "Arabic", "Portuguese", "Italian", "Chinese", "Japanese", or another standard language. Return ONLY JSON. Do not include markdown codeblocks or other comments.`;
+Where "language" is one of: "English", "Gujarati", "Hindi", "Spanish", "French", "German", "Arabic", "Portuguese", "Italian", "Chinese", "Japanese", "Urdu", or another standard language. Return ONLY JSON. Do not include markdown codeblocks or other comments.`;
 
     const modelsToTry = [
       'gemini-2.5-flash',
@@ -87,6 +87,8 @@ Where "language" is one of: "English", "Gujarati", "Hindi", "Spanish", "French",
       language = "Gujarati";
     } else if (/[\u0900-\u097f]/.test(text)) {
       language = "Hindi";
+    } else if (/[\u0600-\u06FF]/.test(text)) {
+      language = "Urdu";
     } else if (lowerText.includes("propiedad") || lowerText.includes("buscar") || lowerText.includes("estoy")) {
       language = "Spanish";
     } else if (lowerText.includes("bonjour") || lowerText.includes("cherche")) {

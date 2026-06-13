@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import AISuitePanel from "@/components/layout/AISuitePanel";
-import GoldParticleCursor from "@/components/layout/GoldParticleCursor";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,7 +20,6 @@ export default function RootLayout({
       className="h-full antialiased"
     >
       <body className="min-h-full flex flex-col bg-background text-foreground animate-fade-in">
-        <GoldParticleCursor />
         <Navbar />
         <main className="flex-1">
           {children}

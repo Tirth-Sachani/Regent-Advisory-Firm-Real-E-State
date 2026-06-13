@@ -9,6 +9,7 @@ export interface Property {
   description: string;
   images: string[];
   features: string[];
+  explanation?: string[];
 }
 
 export const properties: Property[] = [
